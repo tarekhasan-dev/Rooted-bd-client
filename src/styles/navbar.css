@@ -1,0 +1,625 @@
+/* =========================================
+   ROOTED BD - CURVED NAVBAR
+========================================= */
+
+/* =========================================
+   HEADER (shudhu positioning, nijer kono background nei)
+========================================= */
+
+.rbd-header {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  z-index: 1000;
+  width: 100%;
+  padding: 0 20px;
+
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  /* header-er faka jayga click block korbe na */
+  pointer-events: none;
+
+  transition: top 500ms ease;
+}
+
+.rbd-header::before,
+.rbd-header::after {
+  content: none !important;
+  display: none !important;
+}
+
+.rbd-header > * {
+  pointer-events: auto;
+}
+
+/* =========================================
+   MAIN NAVBAR
+   (background .nav-bg layer-e, ekhane shudhu layout)
+========================================= */
+
+.rbd-header .curved-navbar {
+  position: relative;
+
+  width: 1200px;
+  max-width: calc(100% - 40px);
+  min-height: 68px;
+
+  margin: 0 auto;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border-radius: 40px;
+
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  box-shadow: 0 10px 35px rgba(20, 50, 35, 0.10);
+
+  transition:
+    width 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-height 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 500ms ease,
+    box-shadow 500ms ease;
+}
+
+/* =========================================
+   SCROLL ANIMATION (halka shrink: 1200px -> 1120px)
+========================================= */
+
+.rbd-header.rbd-scrolled .curved-navbar {
+  width: 1120px;
+  max-width: calc(100% - 80px);
+  min-height: 64px;
+  padding: 0 22px;
+
+  border-radius: 36px;
+
+  box-shadow: 0 12px 35px rgba(20, 50, 35, 0.15);
+}
+
+/* =========================================
+   BACKGROUND LAYER
+   (solid white, blur nei; notch clip-path JS theke ashe)
+========================================= */
+
+.rbd-header .nav-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  border-radius: inherit;
+  pointer-events: none;
+
+  background: #ffffff;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  transition: none;
+}
+
+/* =========================================
+   SVG BORDER OUTLINE
+========================================= */
+
+.rbd-header .notch-svg {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.rbd-header .notch-svg path {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.06);
+  stroke-width: 1;
+}
+
+/* =========================================
+   BRAND
+========================================= */
+
+.rbd-header .brand {
+  position: relative;
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--color-base-content, #183d2b);
+
+  font-size: 22px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    font-size 500ms ease,
+    gap 500ms ease;
+}
+
+.rbd-header .brand-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #1a3e2f;
+  color: #ffffff;
+
+  transition:
+    width 500ms ease,
+    height 500ms ease;
+}
+
+.rbd-header .brand-highlight {
+  color: #26945b;
+}
+
+.rbd-header .brand small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.rbd-header.rbd-scrolled .brand {
+  font-size: 20px;
+}
+
+.rbd-header.rbd-scrolled .brand-icon {
+  width: 34px;
+  height: 34px;
+}
+
+/* =========================================
+   NAVIGATION LINKS
+========================================= */
+
+.rbd-header .nav-links {
+  position: relative;
+  z-index: 3;
+
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  height: 100%;
+  gap: 5px;
+}
+
+.rbd-header .nav-item {
+  position: relative;
+
+  flex: 1;
+  min-height: 68px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  border: none;
+  border-radius: 20px;
+
+  background: transparent;
+  color: #6c757d;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  transition:
+    color 450ms ease,
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Navigation Icon */
+
+.rbd-header .nav-icon {
+  width: 22px;
+  height: 22px;
+
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 450ms ease;
+}
+
+/* Navigation Label */
+
+.rbd-header .nav-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 450ms ease;
+}
+
+/* =========================================
+   ACTIVE NAVIGATION ANIMATION
+========================================= */
+
+.rbd-header .nav-item.active {
+  color: #1a3e2f;
+}
+
+.rbd-header .nav-item.active .nav-icon {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.45);
+}
+
+.rbd-header .nav-item.active .nav-label {
+  color: #1a3e2f;
+  font-weight: 800;
+  transform: translateY(11px);
+}
+
+/* Hover */
+
+.rbd-header .nav-item:not(.active):hover {
+  color: #1a3e2f;
+}
+
+.rbd-header .nav-item:not(.active):hover .nav-icon {
+  transform: translateY(-3px);
+}
+
+/* =========================================
+   FLOATING ACTIVE BADGE
+   (position JS-er --cx variable theke ashe, GPU transform diye)
+========================================= */
+
+.rbd-header .active-badge {
+  position: absolute;
+  top: -17px;
+  left: 0;
+
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+
+  background: #1a3e2f;
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.20),
+    0 3px 8px rgba(26, 62, 47, 0.20);
+
+  transform: translate3d(calc(var(--cx, 0px) - 50%), 0, 0);
+  scale: 1;
+  will-change: transform;
+
+  z-index: 5;
+  pointer-events: none;
+
+  transition:
+    top 500ms ease,
+    width 500ms ease,
+    height 500ms ease,
+    background 450ms ease,
+    opacity 450ms ease,
+    scale 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* /login ba onno page-e kono tab active na thakle */
+
+.rbd-header .active-badge.is-hidden {
+  opacity: 0;
+  scale: 0.4;
+}
+.rbd-header .active-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.rbd-header .active-badge.pop svg {
+  animation: badgePop 650ms cubic-bezier(0.22, 1.1, 0.36, 1);
+}
+@keyframes badgePop {
+  0% {
+    transform: scale(0.35) rotate(-20deg);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   LOGIN BUTTON
+========================================= */
+
+.rbd-header .nav-cta {
+  position: relative;
+  z-index: 5;
+
+  min-height: 40px;
+  padding: 0 17px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 30px;
+
+  background: #0d9488;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    transform 250ms ease,
+    background 250ms ease,
+    padding 400ms ease;
+}
+
+.rbd-header .nav-cta:hover {
+  background: #0b7a70;
+  transform: translateY(-2px);
+}
+
+.rbd-header.rbd-scrolled .nav-cta {
+  padding: 0 14px;
+}
+
+/* =========================================
+   DARK THEME
+========================================= */
+
+[data-theme="dark"] .rbd-header .nav-bg {
+  background: #111d18;
+}
+
+[data-theme="dark"] .rbd-header .notch-svg path {
+  stroke: rgba(255, 255, 255, 0.13);
+}
+
+[data-theme="dark"] .rbd-header .brand {
+  color: #e5f2e9;
+}
+
+[data-theme="dark"] .rbd-header .nav-item {
+  color: #a8b8ae;
+}
+
+[data-theme="dark"] .rbd-header .nav-item.active,
+[data-theme="dark"] .rbd-header .nav-item.active .nav-label,
+[data-theme="dark"] .rbd-header .nav-item:not(.active):hover {
+  color: #a5e6bd;
+}
+
+[data-theme="dark"] .rbd-header .active-badge {
+  background: #26945b;
+  border-color: #17261e;
+}
+
+/* =========================================
+   RESPONSIVE TABLET
+========================================= */
+
+@media (max-width: 1000px) {
+  .rbd-header .curved-navbar {
+    width: 850px;
+    max-width: calc(100% - 20px);
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  .rbd-header.rbd-scrolled .curved-navbar {
+    width: 800px;
+    max-width: calc(100% - 40px);
+  }
+
+  .rbd-header .brand {
+    font-size: 19px;
+  }
+
+  .rbd-header .nav-label {
+    font-size: 10px;
+  }
+
+  .rbd-header .nav-cta {
+    padding: 0 12px;
+  }
+}
+
+/* =========================================
+   RESPONSIVE MOBILE
+========================================= */
+
+@media (max-width: 760px) {
+  .rbd-header {
+    top: 12px;
+    padding: 0 10px;
+  }
+
+  .rbd-header .curved-navbar,
+  .rbd-header.rbd-scrolled .curved-navbar {
+    width: 100%;
+    max-width: 100%;
+    min-height: 64px;
+
+    padding: 0 12px;
+    gap: 8px;
+
+    border-radius: 28px;
+  }
+
+  .rbd-header .brand {
+    gap: 6px;
+    font-size: 16px;
+  }
+
+  .rbd-header .brand-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .rbd-header .brand-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .rbd-header .brand small {
+    font-size: 9px;
+  }
+
+  .rbd-header .nav-links {
+    gap: 0;
+  }
+
+  .rbd-header .nav-item {
+    min-height: 64px;
+    gap: 3px;
+  }
+
+  .rbd-header .nav-icon {
+    width: 19px;
+    height: 19px;
+  }
+
+  .rbd-header .nav-label {
+    font-size: 9px;
+  }
+
+  .rbd-header .active-badge {
+    top: -13px;
+    width: 44px;
+    height: 44px;
+    border-width: 3px;
+  }
+
+  .rbd-header .active-badge svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .rbd-header .nav-cta {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 10px;
+    gap: 3px;
+  }
+
+  .rbd-header .nav-cta svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+  .rbd-header {
+    padding: 0 6px;
+  }
+
+  .rbd-header .curved-navbar,
+  .rbd-header.rbd-scrolled .curved-navbar {
+    padding: 0 8px;
+    gap: 5px;
+  }
+
+  .rbd-header .brand {
+    font-size: 14px;
+    gap: 4px;
+  }
+
+  .rbd-header .brand-icon {
+    width: 27px;
+    height: 27px;
+  }
+
+  .rbd-header .brand-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rbd-header .brand small {
+    font-size: 8px;
+  }
+
+  .rbd-header .nav-label {
+    font-size: 8px;
+  }
+
+  .rbd-header .nav-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .rbd-header .nav-cta {
+    min-height: 31px;
+    padding: 0 8px;
+    font-size: 9px;
+  }
+
+  .rbd-header .active-badge {
+    width: 39px;
+    height: 39px;
+  }
+
+  .rbd-header .active-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .rbd-header .curved-navbar,
+  .rbd-header .nav-bg,
+  .rbd-header .active-badge,
+  .rbd-header .nav-item,
+  .rbd-header .nav-icon,
+  .rbd-header .nav-label,
+  .rbd-header .brand,
+  .rbd-header .brand-icon {
+    transition: none !important;
+    animation: none !important;
+  }
+}

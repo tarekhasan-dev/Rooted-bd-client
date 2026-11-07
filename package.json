@@ -2,13 +2,19 @@
   "name": "event-platform-client",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
+  
+"scripts": {
+  "dev": "node ./dns-setup.cjs dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "eslint"
+},
   "dependencies": {
+    "@better-auth/mongo-adapter": "^1.7.18",
+    "better-auth": "^1.7.18",
+    "lucide-react": "^1.70.0",
+    "mongodb": "^7.8.0",
+    "motion": "^14.10.0",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"
