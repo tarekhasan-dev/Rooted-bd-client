@@ -3,35 +3,50 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
+const mongoUri = process.env.MONGODB_URI;
+const authUrl = process.env.BETTER_AUTH_URL;
+const authSecret = process.env.BETTER_AUTH_SECRET;
 
+if (!mongoUri) {
+  throw new Error("MONGODB_URI is missing");
+}
 
-const mongoClient = new MongoClient(process.env.MONGODB_URI!);
+if (!authUrl) {
+  throw new Error("BETTER_AUTH_URL is missing");
+}
+
+if (!authSecret) {
+  throw new Error("BETTER_AUTH_SECRET is missing");
+}
+
+const mongoClient = new MongoClient(mongoUri);
 
 const database = mongoClient.db("social_development_events");
 
 export const auth = betterAuth({
   database: mongodbAdapter(database),
 
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: authUrl,
 
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: authSecret,
 
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
+    authUrl,
   ],
 
-    emailAndPassword: {
-  enabled: true,
-  minPasswordLength: 8,
-  maxPasswordLength: 16,
-},
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 16,
+  },
 
   plugins: [
     jwt({
       jwt: {
-        issuer: process.env.BETTER_AUTH_URL,
-        audience: process.env.BETTER_AUTH_URL,
+        issuer: authUrl,
+        audience: authUrl,
         expirationTime: "1h",
       },
     }),
