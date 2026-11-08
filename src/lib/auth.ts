@@ -30,10 +30,11 @@ export const auth = betterAuth({
 
   secret: authSecret,
 
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    authUrl,
+trustedOrigins: [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://rooted-bd-client.vercel.app",
+  authUrl,
   ],
 
   emailAndPassword: {
