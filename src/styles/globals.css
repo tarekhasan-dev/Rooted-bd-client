@@ -5,6 +5,11 @@
    ROOTED BD - DESIGN SYSTEM
 ========================================= */
 
+
+body {
+  font-family: "DM Sans", Arial, Helvetica, sans-serif;
+}
+
 :root {
   --bg: #fbfdf8;
   --bg-secondary: #eef6e8;
@@ -327,9 +332,9 @@ button {
 
   color: #e4f3df;
 
-  font-size: 10px;
+  font-size: 14px;        /* আগে 10px */
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 0.12em; /* আগে 2px */
 }
 
 .intro-star {
@@ -1338,12 +1343,11 @@ button {
     width: calc(100% - 38px);
   }
 
-  .intro-inner {
-    gap: 13px;
-
-    font-size: 8px;
-  }
-
+ .intro-inner {
+  gap: 10px 18px;
+  font-size: 12px;       
+  justify-content: center;
+}
   .section {
     padding: 80px 0;
   }
@@ -1493,3 +1497,17 @@ button {
     scroll-behavior: auto;
   }
 }
+
+:root {
+  --site-max-width: 1210px;
+  --site-side-padding: 24px;
+}
+
+.site-container {
+  width: min(
+    calc(100% - (var(--site-side-padding) * 2)),
+    var(--site-max-width)
+  );
+  margin-inline: auto;
+}
+

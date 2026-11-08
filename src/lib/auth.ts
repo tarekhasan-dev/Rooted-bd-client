@@ -21,9 +21,11 @@ export const auth = betterAuth({
     "http://localhost:3001",
   ],
 
-  emailAndPassword: {
-    enabled: true,
-  },
+    emailAndPassword: {
+  enabled: true,
+  minPasswordLength: 8,
+  maxPasswordLength: 16,
+},
 
   plugins: [
     jwt({

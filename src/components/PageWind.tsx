@@ -1,8 +1,12 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 
 /**
  * Fixed, full-screen layer: leaves and wind streaks blow from the
  * right side of the screen to the left, across the whole page.
  * Pointer events are disabled, so it never blocks clicks.
+ * Renders ONLY on the home page ("/").
  */
 const LEAF = "M0 0C6-8 18-8 26 0C18 8 6 8 0 0ZM2 0H24";
 
@@ -28,6 +32,11 @@ const gusts = [
 ];
 
 export default function PageWind() {
+  const pathname = usePathname();
+
+  // শুধু হোম পেজে দেখাও, বাকি সব পেজে কিছুই রেন্ডার হবে না
+  if (pathname !== "/") return null;
+
   return (
     <svg className="page-wind" aria-hidden="true">
       <g className="wind">

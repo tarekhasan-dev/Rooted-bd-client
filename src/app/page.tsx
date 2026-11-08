@@ -23,7 +23,6 @@ import {
 import { motion } from "motion/react";
 
 import HeroScene from "@/components/HeroScene";
-import Navbar from "@/components/Navbar";
 import PageWind from "@/components/PageWind";
 import { api } from "@/lib/api";
 
@@ -193,13 +192,11 @@ export default function Home() {
 
   return (
     <main className="rooted-home min-h-screen overflow-x-clip">
-      {/* PAGE-WIDE WIND + FLYING LEAVES */}
-      <PageWind />
-
-      <Navbar />
-
       {/* HERO */}
       <section className="hero-section">
+        {/* leaves + wind: hero only */}
+        <PageWind />
+
         <motion.div
           className="hero-copy"
           initial="hidden"
@@ -222,6 +219,7 @@ export default function Home() {
           <motion.div className="hero-cta" variants={fadeUp}>
             <Link href="/events" className="hero-btn hero-btn-solid">
               Explore Events
+              <ArrowRight size={16} style={{ marginLeft: 8 }} />
             </Link>
 
             <Link href="/create-event" className="hero-btn hero-btn-sun">
@@ -230,32 +228,31 @@ export default function Home() {
           </motion.div>
 
           <motion.div variants={fadeUp}>
-            <span className="hero-pill">
-              <i />
-              {loading
-                ? "Loading upcoming events..."
-                : `${events.length} upcoming ${
-                    events.length === 1 ? "event" : "events"
-                  } available`}
-            </span>
+            {loading ? (
+              <span className="hero-pill">
+                <i />
+                Loading upcoming events...
+              </span>
+            ) : events.length === 0 ? (
+              <Link href="/create-event" className="hero-pill hero-pill-cta">
+                <i />
+                Be the first to host an event in your area
+                <ArrowRight size={14} />
+              </Link>
+            ) : (
+              <span className="hero-pill">
+                <i />
+                {events.length} upcoming{" "}
+                {events.length === 1 ? "event" : "events"} available
+              </span>
+            )}
           </motion.div>
         </motion.div>
 
         <HeroScene />
       </section>
 
-      {/* INTRO STRIP */}
-      <section className="intro-strip">
-        <div className="intro-inner">
-          <span>SHOW UP</span>
-          <span className="intro-star">✳</span>
-          <span>PLANT SOMETHING</span>
-          <span className="intro-star">✳</span>
-          <span>HELP SOMEONE</span>
-          <span className="intro-star">✳</span>
-          <span>MAKE AN IMPACT</span>
-        </div>
-      </section>
+     
 
       {/* CATEGORIES */}
       <section id="categories" className="section categories-section">

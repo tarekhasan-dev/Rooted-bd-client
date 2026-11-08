@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-import Navbar from "@/components/Navbar";
 import { api } from "@/lib/api";
 
 interface Event {
@@ -158,8 +156,6 @@ export default function EventsPage() {
 
   return (
     <main className="min-h-screen bg-[#fafaf7] text-[#18352b]">
-      <Navbar />
-
       {/* HERO SECTION */}
 
       <section className="relative overflow-hidden bg-[#18352b] px-5 pb-20 pt-28 text-white md:px-10 md:pb-28 md:pt-36">
