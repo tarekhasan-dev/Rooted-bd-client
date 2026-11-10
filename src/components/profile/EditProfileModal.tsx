@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -243,7 +242,8 @@ export default function EditProfileModal({
     await onSave({
       ...formData,
       name: formData.name.trim(),
-      phone: formData.phone.replace(/[^0-9]/g, "").slice(0, 11),
+      // FIX 1: phone optional হওয়ায় fallback যোগ করা হয়েছে
+      phone: (formData.phone || "").replace(/[^0-9]/g, "").slice(0, 11),
       interests: formData.interests || [],
     });
   };
@@ -574,7 +574,7 @@ export default function EditProfileModal({
               >
                 <span>
                   {(formData.interests || []).length > 0
-                    ? `${formData.interests.length} interests selected`
+                    ? /* FIX 2 */ `${(formData.interests || []).length} interests selected`
                     : "Select your interests"}
                 </span>
 
@@ -657,7 +657,8 @@ export default function EditProfileModal({
 
                 {(formData.interests || []).length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {formData.interests.map((interest) => (
+                    {/* FIX 3 */}
+                    {(formData.interests || []).map((interest) => (
                       <span
                         key={interest}
                         className="inline-flex items-center gap-2 rounded-full border border-[#cfe3d3] bg-[#edf5ee] px-3 py-2 text-xs font-medium text-[#164223]"
