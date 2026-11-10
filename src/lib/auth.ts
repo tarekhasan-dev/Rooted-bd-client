@@ -1,8 +1,14 @@
-
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { jwt } from "better-auth/plugins";
+import { admin as adminPlugin, jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
+
+import {
+  ac,
+  admin,
+  organizer,
+  user,
+} from "@/lib/permissions";
 
 // Environment variables
 const mongoUri = process.env.MONGODB_URI;
@@ -24,14 +30,11 @@ if (!authSecret) {
 
 // MongoDB connection
 const mongoClient = new MongoClient(mongoUri);
-
 const database = mongoClient.db("social_development_events");
 
 // Trusted origins
 const trustedOrigins = [
   new URL(authUrl).origin,
-
-  // Vercel Preview Deployments for this project
   "https://rooted-bd-client-*-tarek-hasan.vercel.app",
 ];
 
@@ -43,7 +46,7 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 
-// Better Auth configuration
+// BetterAuth configuration
 export const auth = betterAuth({
   database: mongodbAdapter(database),
 
@@ -60,6 +63,16 @@ export const auth = betterAuth({
   },
 
   plugins: [
+    adminPlugin({
+      ac,
+      roles: {
+        admin,
+        organizer,
+        user,
+      },
+      defaultRole: "user",
+    }),
+
     jwt({
       jwt: {
         issuer: authUrl,

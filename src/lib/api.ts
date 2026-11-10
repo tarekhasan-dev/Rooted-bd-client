@@ -40,3 +40,15 @@ export const api = async (
 
   return result;
 };
+
+export const getTestToken = async () => {
+  const { data, error } = await authClient.token();
+
+  if (error || !data?.token) {
+    throw new Error("JWT Token not available!");
+  }
+
+  console.log("JWT Token generated successfully!");
+
+  return data.token;
+};
