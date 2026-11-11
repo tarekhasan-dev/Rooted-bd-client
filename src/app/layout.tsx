@@ -1,9 +1,18 @@
+
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
+import { Suspense } from "react";
+
+import {
+  Geist,
+  Geist_Mono,
+  Noto_Sans_Bengali,
+} from "next/font/google";
+
 import Navbar from "@/components/Navbar";
 import ThemeInit from "@/components/ThemeInit";
-import { LanguageProvider } from "@/components/LanguageProvider";
+import LanguageProviderServer from "@/components/LanguageProviderServer";
+
 import "../styles/globals.css";
 
 const geistSans = Geist({
@@ -27,7 +36,11 @@ export const metadata: Metadata = {
     "Find tree drives, river cleanups and community events near you across Bangladesh.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <html
       lang="en"
@@ -36,11 +49,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.variable} ${geistMono.variable} ${bnFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LanguageProvider>
-          <ThemeInit />
-          <Navbar />
-          {children}
-        </LanguageProvider>
+        <Suspense fallback={null}>
+          <LanguageProviderServer>
+            <ThemeInit />
+
+            <Navbar />
+
+            {children}
+          </LanguageProviderServer>
+        </Suspense>
       </body>
     </html>
   );

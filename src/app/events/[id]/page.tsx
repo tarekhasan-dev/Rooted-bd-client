@@ -1,11 +1,13 @@
+
 "use client";
 
 import "@/styles/events.css";
 import "@/styles/event-detail.css";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,10 +20,12 @@ import {
   User,
   Users,
 } from "lucide-react";
+
 import { motion } from "motion/react";
 
 import { useLang } from "@/components/LanguageProvider";
 import { authClient } from "@/lib/auth-client";
+
 import {
   getEventById,
   getMyJoinedEventIds,
@@ -29,6 +33,7 @@ import {
   joinEvent,
   leaveEvent,
 } from "@/services/eventApi";
+
 import type { EventItem } from "@/types/event";
 
 const CREATE_EVENT_HREF = "/create-event";
@@ -66,6 +71,7 @@ const TX = {
     errTitle: "ইভেন্ট লোড করা যায়নি",
     browse: "সব ইভেন্ট দেখুন",
   },
+
   en: {
     back: "All events",
     date: "Date",
@@ -100,13 +106,16 @@ const TX = {
 
 type Status = "loading" | "ready" | "notfound" | "error";
 
-export default function EventDetailPage() {
+// Main Event Detail Component
+function EventDetailContent() {
   const { t, lang } = useLang();
+
   const tx = lang === "bn" ? TX.bn : TX.en;
   const locale = lang === "bn" ? "bn-BD" : "en-US";
 
   const params = useParams<{ id: string }>();
   const id = params?.id;
+
   const router = useRouter();
 
   const { data: session, isPending } = authClient.useSession();
@@ -121,6 +130,7 @@ export default function EventDetailPage() {
   const [notice, setNotice] = useState("");
   const [related, setRelated] = useState<EventItem[]>([]);
 
+  // Load event details
   const loadEvent = useCallback(async () => {
     if (!id) return;
 
@@ -136,7 +146,10 @@ export default function EventDetailPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
 
-      if (message === "Event not found!" || message === "Invalid event ID!") {
+      if (
+        message === "Event not found!" ||
+        message === "Invalid event ID!"
+      ) {
         setStatus("notfound");
       } else {
         setErrorMsg(message);
@@ -149,7 +162,7 @@ export default function EventDetailPage() {
     void loadEvent();
   }, [loadEvent]);
 
-  // Has the logged-in user already joined this event?
+  // Check whether the logged-in user has joined this event
   useEffect(() => {
     if (!userEmail || !id) {
       setJoined(false);
@@ -160,7 +173,9 @@ export default function EventDetailPage() {
 
     getMyJoinedEventIds()
       .then((ids) => {
-        if (!cancelled) setJoined(ids.includes(id));
+        if (!cancelled) {
+          setJoined(ids.includes(id));
+        }
       })
       .catch(() => {});
 
@@ -182,18 +197,31 @@ export default function EventDetailPage() {
       .then((list) => {
         if (cancelled) return;
 
-        const others = list.filter((item) => item._id !== eventId);
-        const type = String(eventType ?? "").trim().toLowerCase();
+        const others = list.filter(
+          (item) => item._id !== eventId
+        );
+
+        const type = String(eventType ?? "")
+          .trim()
+          .toLowerCase();
 
         const same = others.filter(
-          (item) => String(item.eventType ?? "").trim().toLowerCase() === type
+          (item) =>
+            String(item.eventType ?? "")
+              .trim()
+              .toLowerCase() === type
         );
-        const rest = others.filter((item) => !same.includes(item));
+
+        const rest = others.filter(
+          (item) => !same.includes(item)
+        );
 
         setRelated([...same, ...rest].slice(0, 3));
       })
       .catch(() => {
-        if (!cancelled) setRelated([]);
+        if (!cancelled) {
+          setRelated([]);
+        }
       });
 
     return () => {
@@ -201,10 +229,13 @@ export default function EventDetailPage() {
     };
   }, [eventId, eventType]);
 
+  // Format full event date
   const formatDate = (value: string) => {
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return t("date_unavailable");
+    if (Number.isNaN(date.getTime())) {
+      return t("date_unavailable");
+    }
 
     return date.toLocaleDateString(locale, {
       weekday: "long",
@@ -214,10 +245,13 @@ export default function EventDetailPage() {
     });
   };
 
+  // Format short event date
   const formatShortDate = (value: string) => {
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return t("date_unavailable");
+    if (Number.isNaN(date.getTime())) {
+      return t("date_unavailable");
+    }
 
     return date.toLocaleDateString(locale, {
       month: "short",
@@ -231,7 +265,13 @@ export default function EventDetailPage() {
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) return "";
-    if (date.getHours() === 0 && date.getMinutes() === 0) return "";
+
+    if (
+      date.getHours() === 0 &&
+      date.getMinutes() === 0
+    ) {
+      return "";
+    }
 
     return date.toLocaleTimeString(locale, {
       hour: "numeric",
@@ -239,6 +279,7 @@ export default function EventDetailPage() {
     });
   };
 
+  // Join or leave event
   const handleJoin = async () => {
     if (!event || busy) return;
 
@@ -253,25 +294,38 @@ export default function EventDetailPage() {
 
       if (joined) {
         await leaveEvent(event._id);
+
         setJoined(false);
         setCount((c) => Math.max(0, c - 1));
         setNotice(tx.leftMsg);
       } else {
         await joinEvent(event._id);
+
         setJoined(true);
         setCount((c) => c + 1);
         setNotice(tx.joinedMsg);
       }
     } catch (err) {
-      setNotice(err instanceof Error && err.message ? err.message : tx.failed);
+      setNotice(
+        err instanceof Error && err.message
+          ? err.message
+          : tx.failed
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  const isPast = event ? new Date(event.eventDate).getTime() < Date.now() : false;
-  const time = event ? formatTime(event.eventDate) : "";
-  const creator = event?.creatorName || t("evp_member");
+  const isPast = event
+    ? new Date(event.eventDate).getTime() < Date.now()
+    : false;
+
+  const time = event
+    ? formatTime(event.eventDate)
+    : "";
+
+  const creator =
+    event?.creatorName || t("evp_member");
 
   const joinLabel = isPast
     ? tx.ended
@@ -284,21 +338,29 @@ export default function EventDetailPage() {
   return (
     <main className="ev-page evd">
       <div className="ev-wrap">
+
         <Link href="/events" className="evd-back">
           <ArrowLeft size={16} />
           {tx.back}
         </Link>
 
-        {status === "loading" && <div className="ev-skel evd-skel-hero" />}
+        {status === "loading" && (
+          <div className="ev-skel evd-skel-hero" />
+        )}
 
         {status === "notfound" && (
           <div className="ev-empty">
             <span className="ev-empty-icon">
               <CalendarDays size={28} />
             </span>
+
             <h3>{tx.nfTitle}</h3>
             <p>{tx.nfText}</p>
-            <Link href="/events" className="ev-btn ev-btn-wide">
+
+            <Link
+              href="/events"
+              className="ev-btn ev-btn-wide"
+            >
               {tx.browse}
               <ArrowRight size={16} />
             </Link>
@@ -310,8 +372,10 @@ export default function EventDetailPage() {
             <span className="ev-empty-icon">
               <RefreshCw size={26} />
             </span>
+
             <h3>{tx.errTitle}</h3>
             <p>{errorMsg || t("evp_load_failed")}</p>
+
             <button
               type="button"
               className="ev-btn ev-btn-wide"
@@ -332,21 +396,30 @@ export default function EventDetailPage() {
               transition={{ duration: 0.45 }}
             >
               <div className="ev-hero-left">
+
                 <div className="evd-chips">
                   <span className="ev-pill">
                     <Leaf size={12} />
                     {event.eventType || t("type_default")}
                   </span>
-                  {isPast && <span className="evd-ended">{tx.endedBadge}</span>}
+
+                  {isPast && (
+                    <span className="evd-ended">
+                      {tx.endedBadge}
+                    </span>
+                  )}
                 </div>
 
-                <h1 className="ev-display ev-title">{event.title}</h1>
+                <h1 className="ev-display ev-title">
+                  {event.title}
+                </h1>
 
                 <ul className="evd-meta">
                   <li>
                     <span className="evd-ic">
                       <CalendarDays size={16} />
                     </span>
+
                     <div>
                       <small>{tx.date}</small>
                       <b>{formatDate(event.eventDate)}</b>
@@ -358,6 +431,7 @@ export default function EventDetailPage() {
                       <span className="evd-ic">
                         <Clock size={16} />
                       </span>
+
                       <div>
                         <small>{tx.time}</small>
                         <b>{time}</b>
@@ -369,6 +443,7 @@ export default function EventDetailPage() {
                     <span className="evd-ic">
                       <MapPin size={16} />
                     </span>
+
                     <div>
                       <small>{tx.place}</small>
                       <b>{event.location}</b>
@@ -379,6 +454,7 @@ export default function EventDetailPage() {
                     <span className="evd-ic">
                       <User size={16} />
                     </span>
+
                     <div>
                       <small>{tx.host}</small>
                       <b>{creator}</b>
@@ -388,6 +464,7 @@ export default function EventDetailPage() {
 
                 <p className="evd-count" aria-live="polite">
                   <Users size={18} />
+
                   {count === 0 ? (
                     <span>{tx.nobody}</span>
                   ) : (
@@ -396,7 +473,11 @@ export default function EventDetailPage() {
                         key={count}
                         initial={{ scale: 1.4 }}
                         animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 380, damping: 18 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 18,
+                        }}
                       >
                         {count.toLocaleString(locale)}
                       </motion.strong>{" "}
@@ -412,10 +493,15 @@ export default function EventDetailPage() {
                     className="evd-photo"
                     role="img"
                     aria-label={event.title}
-                    style={{ backgroundImage: `url("${event.thumbnail}")` }}
+                    style={{
+                      backgroundImage: `url("${event.thumbnail}")`,
+                    }}
                   />
                 ) : (
-                  <div className="evd-photo evd-photo--empty" aria-hidden="true">
+                  <div
+                    className="evd-photo evd-photo--empty"
+                    aria-hidden="true"
+                  >
                     <Sprout size={96} />
                   </div>
                 )}
@@ -438,7 +524,10 @@ export default function EventDetailPage() {
                     onClick={() => void handleJoin()}
                   >
                     {joinLabel}
-                    {!joined && !isPast && <ArrowRight size={16} />}
+
+                    {!joined && !isPast && (
+                      <ArrowRight size={16} />
+                    )}
                   </button>
 
                   {joined && !isPast && (
@@ -460,20 +549,38 @@ export default function EventDetailPage() {
             </motion.section>
 
             <div className="evd-cols">
+
               <section className="evd-panel">
-                <h2 className="ev-display">{tx.about}</h2>
-                <p className="evd-sub">{tx.aboutSub}</p>
-                <p className="evd-text">{event.description}</p>
+                <h2 className="ev-display">
+                  {tx.about}
+                </h2>
+
+                <p className="evd-sub">
+                  {tx.aboutSub}
+                </p>
+
+                <p className="evd-text">
+                  {event.description}
+                </p>
               </section>
 
               <section className="evd-panel">
-                <h2 className="ev-display">{tx.organizer}</h2>
-                <p className="evd-sub">{tx.organizerSub}</p>
+                <h2 className="ev-display">
+                  {tx.organizer}
+                </h2>
+
+                <p className="evd-sub">
+                  {tx.organizerSub}
+                </p>
 
                 <div className="evd-org">
-                  <span className="evd-avatar" aria-hidden="true">
+                  <span
+                    className="evd-avatar"
+                    aria-hidden="true"
+                  >
                     {creator.trim().charAt(0).toUpperCase()}
                   </span>
+
                   <div>
                     <b>{creator}</b>
                     <small>{t("evp_organized_by")}</small>
@@ -485,29 +592,49 @@ export default function EventDetailPage() {
                   <span>{event.location}</span>
                 </div>
               </section>
+
             </div>
 
             {related.length > 0 && (
               <section className="evd-related">
+
                 <div className="evd-related-head">
-                  <h2 className="ev-display ev-h2">{tx.related}</h2>
-                  <p className="ev-sub">{tx.relatedSub}</p>
+                  <h2 className="ev-display ev-h2">
+                    {tx.related}
+                  </h2>
+
+                  <p className="ev-sub">
+                    {tx.relatedSub}
+                  </p>
                 </div>
 
                 <div className="ev-grid">
                   {related.map((item) => (
-                    <article key={item._id} className="ev-card">
+                    <article
+                      key={item._id}
+                      className="ev-card"
+                    >
                       <div
                         className="ev-thumb"
-                        role={item.thumbnail ? "img" : undefined}
-                        aria-label={item.thumbnail ? item.title : undefined}
+                        role={
+                          item.thumbnail ? "img" : undefined
+                        }
+                        aria-label={
+                          item.thumbnail
+                            ? item.title
+                            : undefined
+                        }
                         style={
                           item.thumbnail
-                            ? { backgroundImage: `url("${item.thumbnail}")` }
+                            ? {
+                                backgroundImage: `url("${item.thumbnail}")`,
+                              }
                             : undefined
                         }
                       >
-                        {!item.thumbnail && <Sprout size={54} />}
+                        {!item.thumbnail && (
+                          <Sprout size={54} />
+                        )}
                       </div>
 
                       <div className="ev-card-body">
@@ -516,26 +643,36 @@ export default function EventDetailPage() {
                         </span>
 
                         <h3>{item.title}</h3>
-                        <p className="ev-desc">{item.description}</p>
+
+                        <p className="ev-desc">
+                          {item.description}
+                        </p>
 
                         <ul className="ev-meta">
                           <li>
                             <CalendarDays size={15} />
-                            <span>{formatShortDate(item.eventDate)}</span>
+                            <span>
+                              {formatShortDate(item.eventDate)}
+                            </span>
                           </li>
+
                           <li>
                             <MapPin size={15} />
                             <span>{item.location}</span>
                           </li>
                         </ul>
 
-                        <Link href={`/events/${item._id}`} className="ev-btn">
+                        <Link
+                          href={`/events/${item._id}`}
+                          className="ev-btn"
+                        >
                           {t("view_event")}
                         </Link>
                       </div>
                     </article>
                   ))}
                 </div>
+
               </section>
             )}
           </>
@@ -544,11 +681,17 @@ export default function EventDetailPage() {
         {!isPending && !userEmail && status !== "loading" && (
           <section className="ev-cta">
             <div>
-              <h2 className="ev-display">{t("evp_cta_title")}</h2>
+              <h2 className="ev-display">
+                {t("evp_cta_title")}
+              </h2>
+
               <p>{t("evp_cta_text")}</p>
             </div>
 
-            <Link href={JOIN_HREF} className="ev-amber">
+            <Link
+              href={JOIN_HREF}
+              className="ev-amber"
+            >
               {t("join_community")}
               <ArrowRight size={16} />
             </Link>
@@ -558,17 +701,35 @@ export default function EventDetailPage() {
         {!isPending && userEmail && status === "ready" && (
           <section className="ev-cta">
             <div>
-              <h2 className="ev-display">{t("evp_card_title")}</h2>
+              <h2 className="ev-display">
+                {t("evp_card_title")}
+              </h2>
+
               <p>{t("evp_card_text")}</p>
             </div>
 
-            <Link href={CREATE_EVENT_HREF} className="ev-amber">
+            <Link
+              href={CREATE_EVENT_HREF}
+              className="ev-amber"
+            >
               {t("host_event")}
               <ArrowRight size={16} />
             </Link>
           </section>
         )}
+
       </div>
     </main>
+  );
+}
+
+// Suspense boundary for useParams()
+export default function EventDetailPage() {
+  return (
+    <Suspense
+      fallback={<div className="min-h-screen" />}
+    >
+      <EventDetailContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import "@/styles/navbar.css";
@@ -40,8 +41,6 @@ const SCROLL_OFFSET = 90;
 const SCROLL_DURATION = 600;
 
 // Scroll-spy settings
-// পেজে section-গুলো যে ক্রমে আছে, এখানেও সেই ক্রমে লিখতে হবে।
-// Hero → categories → about → (process) → events → gallery → (cta) → contact
 const SPY_SECTIONS: { id: string; index: number }[] = [
   { id: "categories", index: 1 },
   { id: "about", index: 2 },
@@ -49,18 +48,20 @@ const SPY_SECTIONS: { id: string; index: number }[] = [
   { id: "gallery", index: 3 },
   { id: "contact", index: 4 },
 ];
-// স্ক্রিনের উপর থেকে কত অংশে (০ থেকে ১) "active লাইন" থাকবে
+
 const SPY_LINE = 0.35;
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
-// onEnd সবসময় ডাক পড়বে: scroll শেষ হলে, interrupt হলে, বা দরকার না হলে
+// Smooth scrolling utility
 function smoothScrollTo(
   targetY: number,
   rafRef: { current: number | null },
   onEnd?: () => void
 ) {
-  if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  if (rafRef.current !== null) {
+    cancelAnimationFrame(rafRef.current);
+  }
 
   const root = document.documentElement;
 
@@ -86,11 +87,16 @@ function smoothScrollTo(
   const startTime = performance.now();
 
   const finish = () => {
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
     rafRef.current = null;
     root.style.scrollBehavior = previousBehavior;
+
     window.removeEventListener("wheel", finish);
     window.removeEventListener("touchstart", finish);
+
     onEnd?.();
   };
 
@@ -98,9 +104,15 @@ function smoothScrollTo(
   window.addEventListener("touchstart", finish, { passive: true });
 
   const step = (now: number) => {
-    const progress = Math.min((now - startTime) / SCROLL_DURATION, 1);
+    const progress = Math.min(
+      (now - startTime) / SCROLL_DURATION,
+      1
+    );
 
-    window.scrollTo(0, startY + distance * easeOutCubic(progress));
+    window.scrollTo(
+      0,
+      startY + distance * easeOutCubic(progress)
+    );
 
     if (progress < 1) {
       rafRef.current = requestAnimationFrame(step);
@@ -128,6 +140,7 @@ function getTabFromUrl(pathname: string, hash: string) {
     if (hash === "#about") return 2;
     if (hash === "#gallery") return 3;
     if (hash === "#contact") return 4;
+
     return 0;
   }
 
@@ -137,56 +150,70 @@ function getTabFromUrl(pathname: string, hash: string) {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Cookie-based language provider
   const { t } = useLang();
 
   const { data: session, isPending } = authClient.useSession();
+
   const user = session?.user as SessionUser | undefined;
   const userEmail = user?.email;
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  const [active, setActive] = useState(() => getTabFromUrl(pathname, ""));
+  const [active, setActive] = useState(() =>
+    getTabFromUrl(pathname, "")
+  );
+
   const [scrolled, setScrolled] = useState(false);
   const [instant, setInstant] = useState(true);
 
   const pendingRef = useRef<number | null>(null);
   const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // smooth scroll চলার সময় true: তখন scroll-spy active tab বদলায় না
+
   const spyLocked = useRef(false);
-  // অন্য পেজ থেকে /#section-এ আসার সময় কোন section-এ যেতে হবে
   const arrivalHash = useRef<string | null>(null);
   const lastTab = useRef(Math.max(active, 0));
   const scrollRaf = useRef<number | null>(null);
 
   useEffect(() => {
-    if (active >= 0) lastTab.current = active;
+    if (active >= 0) {
+      lastTab.current = active;
+    }
   }, [active]);
 
   const shown = active >= 0 ? active : lastTab.current;
 
-  // id দিলে সেই section-এ, null দিলে একদম উপরে smooth scroll
+  // Scroll to a section or page top
   const scrollToId = useCallback((id: string | null) => {
     spyLocked.current = true;
 
     const el = id ? document.getElementById(id) : null;
+
     const top = el
-      ? el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+      ? el.getBoundingClientRect().top +
+        window.scrollY -
+        SCROLL_OFFSET
       : 0;
 
     smoothScrollTo(top, scrollRaf, () => {
       spyLocked.current = false;
-      // scroll শেষ: spy একবার ঠিক করে নেবে
+
       window.dispatchEvent(new Event("scroll"));
     });
   }, []);
 
+  // Initial navbar animation
   useEffect(() => {
-    const timer = setTimeout(() => setInstant(false), 80);
+    const timer = setTimeout(() => {
+      setInstant(false);
+    }, 80);
+
     return () => clearTimeout(timer);
   }, []);
 
-  // প্রোফাইল ছবি আনা (MongoDB থেকে) + "profile-updated" ইভেন্টে আবার আনা
+  // Load profile image from MongoDB
   useEffect(() => {
     if (!userEmail) {
       setProfileImage(null);
@@ -198,21 +225,33 @@ export default function Navbar() {
     const loadProfileImage = async () => {
       try {
         const profile = await getMyProfile();
-        if (!cancelled) setProfileImage(profile.image ?? null);
+
+        if (!cancelled) {
+          setProfileImage(profile.image ?? null);
+        }
       } catch {
-        // ছবি না এলে সেশনের ছবি/নামের প্রথম অক্ষরই দেখাবে
+        // Fallback to session image or user initials
       }
     };
 
     loadProfileImage();
-    window.addEventListener("profile-updated", loadProfileImage);
+
+    window.addEventListener(
+      "profile-updated",
+      loadProfileImage
+    );
 
     return () => {
       cancelled = true;
-      window.removeEventListener("profile-updated", loadProfileImage);
+
+      window.removeEventListener(
+        "profile-updated",
+        loadProfileImage
+      );
     };
   }, [userEmail]);
 
+  // Sync active navigation tab with URL
   useEffect(() => {
     const sync = () => {
       const idx = getTabFromUrl(
@@ -221,7 +260,10 @@ export default function Navbar() {
       );
 
       if (pendingRef.current !== null) {
-        if (idx === pendingRef.current) pendingRef.current = null;
+        if (idx === pendingRef.current) {
+          pendingRef.current = null;
+        }
+
         return;
       }
 
@@ -239,18 +281,28 @@ export default function Navbar() {
     };
   }, [pathname]);
 
+  // Navbar scroll state
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      setScrolled((prev) => (prev ? y > 40 : y > 80));
+
+      setScrolled((prev) =>
+        prev ? y > 40 : y > 80
+      );
     };
 
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    window.addEventListener("scroll", onScroll, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
-  // ---------- Scroll-spy: স্ক্রল করলে active tab নিজে থেকে বদলাবে ----------
+  // Scroll spy
   useEffect(() => {
     if (pathname !== "/") return;
 
@@ -260,45 +312,51 @@ export default function Navbar() {
     const compute = () => {
       raf = null;
 
-      // Navbar button চাপার পর smooth scroll চলার সময় spy বন্ধ
       if (spyLocked.current) return;
-      // অন্য পেজে যাওয়ার সময়ও বন্ধ
       if (pendingRef.current !== null) return;
 
       const line = window.innerHeight * SPY_LINE;
 
-      let next = 0; // ডিফল্ট: Home
+      let next = 0;
       let lastExisting = 0;
 
       for (const { id, index } of SPY_SECTIONS) {
         const el = document.getElementById(id);
+
         if (!el) continue;
 
         lastExisting = index;
-        if (el.getBoundingClientRect().top <= line) next = index;
+
+        if (el.getBoundingClientRect().top <= line) {
+          next = index;
+        }
       }
 
-      // পেজের একদম নিচে পৌঁছালে শেষ section active
       const atBottom =
         window.scrollY > 0 &&
         window.innerHeight + window.scrollY >=
           document.documentElement.scrollHeight - 4;
 
-      if (atBottom && lastExisting > 0) next = lastExisting;
+      if (atBottom && lastExisting > 0) {
+        next = lastExisting;
+      }
 
-      setActive((prev) => (prev === next ? prev : next));
+      setActive((prev) =>
+        prev === next ? prev : next
+      );
     };
 
     const schedule = () => {
       if (raf !== null) return;
+
       raf = requestAnimationFrame(compute);
     };
 
     const arrivalId = arrivalHash.current;
 
     if (arrivalId) {
-      // অন্য পেজ থেকে এসেছি: spy বন্ধ রেখে পেজ বসার পর smooth scroll
       spyLocked.current = true;
+
       arrivalTimer = setTimeout(() => {
         arrivalHash.current = null;
         scrollToId(arrivalId);
@@ -308,77 +366,123 @@ export default function Navbar() {
       compute();
     }
 
-    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("scroll", schedule, {
+      passive: true,
+    });
+
     window.addEventListener("resize", schedule);
 
     return () => {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      if (raf !== null) cancelAnimationFrame(raf);
-      if (arrivalTimer) clearTimeout(arrivalTimer);
+
+      if (raf !== null) {
+        cancelAnimationFrame(raf);
+      }
+
+      if (arrivalTimer) {
+        clearTimeout(arrivalTimer);
+      }
     };
   }, [pathname, scrollToId]);
 
+  // Cleanup timers and animation frames
   useEffect(() => {
     return () => {
-      if (navTimer.current) clearTimeout(navTimer.current);
-      if (pendingTimer.current) clearTimeout(pendingTimer.current);
-      if (scrollRaf.current !== null) cancelAnimationFrame(scrollRaf.current);
+      if (navTimer.current) {
+        clearTimeout(navTimer.current);
+      }
+
+      if (pendingTimer.current) {
+        clearTimeout(pendingTimer.current);
+      }
+
+      if (scrollRaf.current !== null) {
+        cancelAnimationFrame(scrollRaf.current);
+      }
     };
   }, []);
 
+  // Navigation click handler
   const handleNav = (
     e: MouseEvent<HTMLAnchorElement>,
     index: number,
     href: string
   ) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+    if (
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey ||
+      e.button !== 0
+    ) {
       return;
     }
 
     e.preventDefault();
 
     const [rawPath, hash] = href.split("#");
+
     const targetPath = rawPath || "/";
     const samePage = targetPath === window.location.pathname;
 
-    if (navTimer.current) clearTimeout(navTimer.current);
+    if (navTimer.current) {
+      clearTimeout(navTimer.current);
+    }
 
-    // bubble সাথে সাথে ক্লিক করা tab-এ slide শুরু করবে
     setActive(index);
 
     if (samePage) {
-      // URL আগে বদলাও, তারপর স্ক্রল (যাতে স্ক্রল মাঝপথে না কাটে)
-      const current = window.location.pathname + window.location.hash;
-      const next = hash ? `${targetPath}#${hash}` : targetPath;
-      if (current !== next) window.history.pushState(null, "", href);
+      const current =
+        window.location.pathname + window.location.hash;
+
+      const next = hash
+        ? `${targetPath}#${hash}`
+        : targetPath;
+
+      if (current !== next) {
+        window.history.pushState(null, "", href);
+      }
 
       scrollToId(hash ?? null);
       return;
     }
 
     pendingRef.current = index;
-    if (pendingTimer.current) clearTimeout(pendingTimer.current);
+
+    if (pendingTimer.current) {
+      clearTimeout(pendingTimer.current);
+    }
+
     pendingTimer.current = setTimeout(() => {
       pendingRef.current = null;
     }, 4000);
 
-    // hash থাকলে Next-এর লাফ বন্ধ করো, পেজ লোড হলে আমরা নিজেরা smooth scroll করব
-    if (hash) arrivalHash.current = hash;
+    if (hash) {
+      arrivalHash.current = hash;
+    }
 
     navTimer.current = setTimeout(
-      () => router.push(href, hash ? { scroll: false } : undefined),
+      () =>
+        router.push(
+          href,
+          hash ? { scroll: false } : undefined
+        ),
       NAV_DELAY
     );
   };
 
+  // Logout
   const handleLogout = async () => {
     await authClient.signOut();
+
     router.push("/");
     router.refresh();
   };
 
-  if (pathname === "/login" || pathname === "/signup") return null;
+  if (pathname === "/login" || pathname === "/signup") {
+    return null;
+  }
 
   return (
     <header className="rbd-header">
@@ -397,6 +501,7 @@ export default function Navbar() {
             <svg viewBox="0 0 92 44" width="92" height="44">
               <path d="M0 0 C14 0 18 42 46 42 C74 42 78 0 92 0 V44 H0 Z" />
             </svg>
+
             <div className="rbd-bg-fill" />
           </div>
 
@@ -425,20 +530,30 @@ export default function Navbar() {
               key={href}
               href={href}
               className="rbd-tab"
-              aria-current={active === index ? "page" : undefined}
-              onClick={(e) => handleNav(e, index, href)}
+              aria-current={
+                active === index ? "page" : undefined
+              }
+              onClick={(e) =>
+                handleNav(e, index, href)
+              }
             >
               <span className="rbd-tab-icon">
                 <Icon size={22} />
               </span>
-              <span className="rbd-tab-label">{t(key)}</span>
+
+              <span className="rbd-tab-label">
+                {t(key)}
+              </span>
             </Link>
           ))}
         </div>
 
         <div className="rbd-login-wrap">
           {isPending ? (
-            <span className="rpd-skeleton" aria-hidden="true" />
+            <span
+              className="rpd-skeleton"
+              aria-hidden="true"
+            />
           ) : user ? (
             <ProfileDropdown
               user={{
@@ -452,10 +567,13 @@ export default function Navbar() {
           ) : (
             <>
               <LanguageToggle inline />
+
               <Link
                 href="/login"
                 className="rbd-login"
-                onClick={(e) => handleNav(e, -1, "/login")}
+                onClick={(e) =>
+                  handleNav(e, -1, "/login")
+                }
               >
                 {t("nav_login")}
                 <ArrowUpRight size={16} />
@@ -469,7 +587,9 @@ export default function Navbar() {
             <Icon
               key={href}
               size={24}
-              className={index === shown ? "is-on" : undefined}
+              className={
+                index === shown ? "is-on" : undefined
+              }
             />
           ))}
         </div>
