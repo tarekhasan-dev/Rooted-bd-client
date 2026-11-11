@@ -1,14 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=DM+Sans:wght@400;500;700&display=swap");
+
 @import "tailwindcss";
 @import "./hero.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* =========================================
    ROOTED BD - DESIGN SYSTEM
 ========================================= */
-
-
-body {
-  font-family: "DM Sans", Arial, Helvetica, sans-serif;
-}
 
 :root {
   --bg: #fbfdf8;
@@ -31,7 +30,10 @@ body {
 
   --shadow: 0 15px 45px rgba(32, 75, 39, 0.08);
 
-  --font-main: Arial, Helvetica, sans-serif;
+  --font-main: "DM Sans", Arial, Helvetica, sans-serif;
+
+  --site-max-width: 1210px;
+  --site-side-padding: 24px;
 }
 
 [data-theme="dark"] {
@@ -71,9 +73,24 @@ html {
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-main);
   background: var(--bg);
   color: var(--foreground);
+}
+
+/* Bangla: use Noto Sans Bengali and relax the tight spacing */
+html[lang="bn"] body {
+  font-family: var(--font-bn), "DM Sans", Arial, sans-serif;
+}
+
+html[lang="bn"] h1,
+html[lang="bn"] h2,
+html[lang="bn"] h3,
+html[lang="bn"] h4,
+html[lang="bn"] .eyebrow,
+html[lang="bn"] .brand {
+  letter-spacing: 0;
+  line-height: 1.4;
 }
 
 button,
@@ -107,8 +124,16 @@ button {
   scroll-margin-top: 90px;
 }
 
+.site-container {
+  width: min(
+    calc(100% - (var(--site-side-padding) * 2)),
+    var(--site-max-width)
+  );
+  margin-inline: auto;
+}
+
 /* =========================================
-   NAVBAR
+   NAVBAR (legacy)
 ========================================= */
 
 .site-header {
@@ -332,9 +357,9 @@ button {
 
   color: #e4f3df;
 
-  font-size: 14px;        /* আগে 10px */
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.12em; /* আগে 2px */
+  letter-spacing: 0.12em;
 }
 
 .intro-star {
@@ -590,9 +615,7 @@ button {
   position: absolute;
   inset: 0 40px 30px 0;
 
-  background-image: url(
-    "https://images.unsplash.com/photo-1511497584788-876760111969?w=1100"
-  );
+  background-image: url("https://images.unsplash.com/photo-1511497584788-876760111969?w=1100");
 
   background-size: cover;
   background-position: center;
@@ -766,7 +789,6 @@ button {
   letter-spacing: 1.4px;
 }
 
-
 /* =========================================
    EVENTS
 ========================================= */
@@ -830,6 +852,85 @@ button {
   line-height: 1.8;
 }
 
+/* Event cards */
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.event-card {
+  overflow: hidden;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: 13px;
+
+  box-shadow: var(--shadow);
+
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--primary);
+}
+
+.event-thumb {
+  position: relative;
+
+  height: 200px;
+
+  background-color: var(--bg-tertiary);
+  background-size: cover;
+  background-position: center;
+}
+
+.event-type {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+
+  padding: 6px 12px;
+
+  color: white;
+  background: var(--primary);
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.event-body {
+  display: grid;
+  gap: 10px;
+
+  padding: 22px;
+}
+
+.event-body h3 {
+  margin: 0;
+
+  font-size: 17px;
+}
+
+.event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
 /* =========================================
    GALLERY
 ========================================= */
@@ -877,10 +978,7 @@ button {
 
   color: white;
 
-  background: linear-gradient(
-    transparent 35%,
-    rgba(0, 0, 0, 0.72)
-  );
+  background: linear-gradient(transparent 35%, rgba(0, 0, 0, 0.72));
 
   transition: 0.3s ease;
 }
@@ -1260,7 +1358,8 @@ button {
     width: calc(100% - 55px);
   }
 
-  .category-grid {
+  .category-grid,
+  .event-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1343,11 +1442,12 @@ button {
     width: calc(100% - 38px);
   }
 
- .intro-inner {
-  gap: 10px 18px;
-  font-size: 12px;       
-  justify-content: center;
-}
+  .intro-inner {
+    gap: 10px 18px;
+    font-size: 12px;
+    justify-content: center;
+  }
+
   .section {
     padding: 80px 0;
   }
@@ -1368,6 +1468,10 @@ button {
   .category-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 15px;
+  }
+
+  .event-grid {
+    grid-template-columns: 1fr;
   }
 
   .category-image {
@@ -1491,23 +1595,8 @@ button {
    REDUCED MOTION
 ========================================= */
 
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 }
-
-:root {
-  --site-max-width: 1210px;
-  --site-side-padding: 24px;
-}
-
-.site-container {
-  width: min(
-    calc(100% - (var(--site-side-padding) * 2)),
-    var(--site-max-width)
-  );
-  margin-inline: auto;
-}
-

@@ -1,0 +1,684 @@
+/* src/styles/events.css
+   Events page, styled after the login page.
+   Dark mode follows html[data-theme="dark"] (same as globals.css). */
+
+.ev-page {
+  --ev-bg-1: #f0f8de;
+  --ev-bg-2: #e2f0cc;
+  --ev-bg-3: #cde5c4;
+  --ev-card: #ffffff;
+  --ev-card-soft: rgba(255, 255, 255, 0.85);
+  --ev-soft: #f6faf2;
+  --ev-inset: #f8fbf2;
+  --ev-ink: #1b4d3e;
+  --ev-muted: #4b6b5f;
+  --ev-line: #dfe7dc;
+  --ev-line-soft: #e3ecda;
+  --ev-teal: #0f766e;
+  --ev-teal-hover: #0b5f58;
+  --ev-btn-ink: #ffffff;
+  --ev-amber: #f2b429;
+  --ev-amber-ink: #1b4d3e;
+  --ev-badge-bg: #1b4d3e;
+  --ev-badge-ink: #ffffff;
+  --ev-empty-bg: #f8fbf2;
+  --ev-empty-line: #cfe0c4;
+  --ev-empty-icon: #e3f0d3;
+  --ev-thumb: #cfe6b6;
+  --ev-cta-bg: #1b4d3e;
+  --ev-cta-ink: #ffffff;
+  --ev-cta-muted: #cfe6d8;
+  --ev-shadow: rgba(27, 77, 62, 0.4);
+  --ev-art-filter: none;
+
+  min-height: 100vh;
+  /* top padding bigger so the fixed navbar (and its bubble) never touches the hero */
+  padding: 10.5rem 1rem 5rem;
+  color: var(--ev-ink);
+  background: linear-gradient(135deg, var(--ev-bg-1) 0%, var(--ev-bg-2) 50%, var(--ev-bg-3) 100%);
+}
+
+@media (max-width: 760px) {
+  .ev-page {
+    padding-top: 6.5rem;
+  }
+}
+
+[data-theme="dark"] .ev-page {
+  --ev-bg-1: #0e1b12;
+  --ev-bg-2: #132519;
+  --ev-bg-3: #0e1b12;
+  --ev-card: #17291c;
+  --ev-card-soft: rgba(23, 41, 28, 0.85);
+  --ev-soft: #112017;
+  --ev-inset: #112017;
+  --ev-ink: #e3f4e5;
+  --ev-muted: #a1b5a4;
+  --ev-line: #29422e;
+  --ev-line-soft: #29422e;
+  --ev-teal: #51cf66;
+  --ev-teal-hover: #69db7c;
+  --ev-btn-ink: #0e1b12;
+  --ev-badge-bg: #1c3524;
+  --ev-badge-ink: #e3f4e5;
+  --ev-empty-bg: #112017;
+  --ev-empty-line: #2f4a35;
+  --ev-empty-icon: #1c3524;
+  --ev-thumb: #1c3524;
+  --ev-cta-bg: #09140c;
+  --ev-shadow: rgba(0, 0, 0, 0.6);
+  --ev-art-filter: brightness(0.8) saturate(0.9);
+}
+
+.ev-wrap {
+  max-width: 70rem;
+  margin: 0 auto;
+}
+
+.ev-display {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 800;
+}
+
+/* Bangla: Fraunces has no Bengali glyphs, use the site Bangla font */
+html[lang="bn"] .ev-display {
+  font-family: var(--font-bn), "DM Sans", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* ---------- Hero split card ---------- */
+
+.ev-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+  padding: 0.9rem;
+  border-radius: 2rem;
+  background: var(--ev-card);
+  box-shadow: 0 30px 70px -28px var(--ev-shadow);
+}
+
+@media (min-width: 900px) {
+  .ev-hero {
+    grid-template-columns: 1.05fr 1fr;
+  }
+}
+
+.ev-hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.75rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .ev-hero-left {
+    padding: 2rem 2.5rem;
+  }
+}
+
+.ev-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.25rem;
+}
+
+.ev-logo-icon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: #1b4d3e;
+  color: #fff;
+  box-shadow: 0 8px 16px -8px rgba(27, 77, 62, 0.7);
+}
+
+.ev-logo-text {
+  font-size: 1.4rem;
+}
+
+.ev-logo-text small {
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ev-logo-dot {
+  color: var(--ev-amber);
+}
+
+.ev-title {
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+  line-height: 1.1;
+}
+
+html[lang="bn"] .ev-title {
+  line-height: 1.35;
+}
+
+.ev-lead {
+  max-width: 28rem;
+  margin: 0.9rem 0 0;
+  color: var(--ev-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.ev-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ev-muted);
+  font-size: 0.9rem;
+}
+
+.ev-perks li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ev-label {
+  display: block;
+  margin-top: 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ev-search {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.ev-search-icon {
+  position: absolute;
+  left: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ev-muted);
+  pointer-events: none;
+}
+
+.ev-input {
+  width: 100%;
+  height: 3.4rem;
+  padding: 0 3rem 0 3rem;
+  border: 1px solid var(--ev-line);
+  border-radius: 999px;
+  background: var(--ev-soft);
+  color: var(--ev-ink);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ev-input::placeholder {
+  color: var(--ev-muted);
+  opacity: 0.8;
+}
+
+.ev-input:focus {
+  border-color: var(--ev-teal);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.15);
+}
+
+.ev-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ev-muted);
+  cursor: pointer;
+}
+
+.ev-search-clear:hover {
+  color: var(--ev-ink);
+}
+
+.ev-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ev-chip {
+  min-height: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--ev-line);
+  border-radius: 999px;
+  background: var(--ev-card);
+  color: var(--ev-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ev-chip:hover {
+  border-color: var(--ev-teal);
+}
+
+.ev-chip[aria-pressed="true"] {
+  border-color: var(--ev-teal);
+  background: var(--ev-teal);
+  color: var(--ev-btn-ink);
+}
+
+.ev-chip:focus-visible,
+.ev-btn:focus-visible,
+.ev-amber:focus-visible,
+.ev-search-clear:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.45);
+  outline-offset: 2px;
+}
+
+/* Illustration panel */
+
+.ev-art {
+  position: relative;
+  min-height: 30rem;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: #d6ecb9;
+}
+
+.ev-art > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: var(--ev-art-filter);
+}
+.ev-inset {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 1.5rem;
+  background: var(--ev-inset);
+  box-shadow: 0 18px 34px -18px rgba(0, 0, 0, 0.45);
+}
+
+.ev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--ev-badge-bg);
+  color: var(--ev-badge-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ev-inset h2 {
+  margin: 0.65rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+html[lang="bn"] .ev-inset h2 {
+  font-family: var(--font-bn), "DM Sans", Arial, sans-serif;
+  line-height: 1.45;
+}
+
+.ev-inset p {
+  margin: 0.3rem 0 0;
+  color: var(--ev-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+html[lang="bn"] .ev-inset p {
+  line-height: 1.7;
+}
+
+/* Small screens: put the inset card in normal flow so nothing gets covered */
+@media (max-width: 899px) {
+  .ev-art {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-top: 15rem;
+  }
+
+  .ev-inset {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin: 1rem;
+  }
+}
+
+.ev-amber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  margin-top: 0.9rem;
+  border-radius: 999px;
+  background: var(--ev-amber);
+  color: var(--ev-amber-ink);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 20px -8px rgba(242, 180, 41, 0.9);
+  transition: filter 0.2s;
+}
+
+.ev-amber:hover {
+  filter: brightness(0.95);
+}
+
+/* ---------- Results panel ---------- */
+
+.ev-results {
+  margin-top: 1.75rem;
+  padding: 1.75rem 1.5rem 2rem;
+  border-radius: 2rem;
+  background: var(--ev-card-soft);
+  box-shadow: 0 22px 50px -32px var(--ev-shadow);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 640px) {
+  .ev-results {
+    padding: 2.25rem 2.5rem 2.5rem;
+  }
+}
+
+.ev-results-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ev-h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.ev-sub {
+  margin: 0.3rem 0 0;
+  color: var(--ev-muted);
+}
+
+.ev-count {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ev-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.ev-link-btn {
+  border: 0;
+  background: none;
+  color: var(--ev-teal);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+  gap: 1.4rem;
+  margin-top: 1.6rem;
+}
+
+/* Cards */
+
+.ev-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ev-line-soft);
+  border-radius: 1.6rem;
+  background: var(--ev-card);
+  box-shadow: 0 16px 30px -24px var(--ev-shadow);
+  transition: transform 0.25s;
+}
+
+.ev-card:hover {
+  transform: translateY(-3px);
+}
+
+.ev-thumb {
+  position: relative;
+  height: 9.5rem;
+  background: var(--ev-thumb) center / cover no-repeat;
+  display: grid;
+  place-items: center;
+  color: var(--ev-ink);
+}
+
+.ev-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.ev-card-body .ev-pill {
+  align-self: flex-start;
+}
+
+.ev-card h3 {
+  display: -webkit-box;
+  margin: 0.75rem 0 0;
+  overflow: hidden;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ev-desc {
+  display: -webkit-box;
+  margin: 0.5rem 0 0;
+  overflow: hidden;
+  color: var(--ev-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ev-meta {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ev-muted);
+  font-size: 0.9rem;
+}
+
+.ev-meta li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ev-meta svg {
+  flex-shrink: 0;
+}
+
+.ev-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-by {
+  margin: 0.9rem 0 0;
+  color: var(--ev-muted);
+  font-size: 0.8rem;
+}
+
+.ev-by strong {
+  display: block;
+  color: var(--ev-ink);
+  font-size: 0.9rem;
+}
+
+.ev-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.9rem;
+  margin-top: auto;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ev-teal);
+  color: var(--ev-btn-ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ev-btn:hover {
+  background: var(--ev-teal-hover);
+}
+
+.ev-card-body .ev-by + .ev-btn {
+  margin-top: 1rem;
+}
+
+.ev-btn-wide {
+  display: inline-flex;
+  padding: 0 2rem;
+  margin-top: 1.5rem;
+}
+
+/* Skeleton */
+
+.ev-skel {
+  height: 22rem;
+  border-radius: 1.6rem;
+  background: var(--ev-thumb);
+  opacity: 0.7;
+  animation: ev-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ev-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-skel {
+    animation: none;
+  }
+  .ev-card {
+    transition: none;
+  }
+}
+
+/* Empty / error */
+
+.ev-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.6rem;
+  padding: 3.5rem 1.5rem;
+  border: 2px dashed var(--ev-empty-line);
+  border-radius: 1.6rem;
+  background: var(--ev-empty-bg);
+  text-align: center;
+}
+
+.ev-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--ev-empty-icon);
+  color: var(--ev-ink);
+}
+
+.ev-empty h3 {
+  margin: 1.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.ev-empty p {
+  max-width: 24rem;
+  margin: 0.4rem 0 0;
+  color: var(--ev-muted);
+  line-height: 1.6;
+}
+
+/* Bottom CTA */
+
+.ev-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+  padding: 2rem 1.75rem;
+  border-radius: 2rem;
+  background: var(--ev-cta-bg);
+  color: var(--ev-cta-ink);
+}
+
+@media (min-width: 640px) {
+  .ev-cta {
+    padding: 2.25rem 3rem;
+  }
+}
+
+.ev-cta h2 {
+  margin: 0;
+  font-size: 1.9rem;
+}
+
+.ev-cta p {
+  max-width: 34rem;
+  margin: 0.4rem 0 0;
+  color: var(--ev-cta-muted);
+  line-height: 1.55;
+}
+
+.ev-cta .ev-amber {
+  margin-top: 0;
+  padding: 0 1.75rem;
+}

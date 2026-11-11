@@ -1,0 +1,260 @@
+/* Event detail page. Reuses the ev-* classes from events.css,
+   and only adds what the detail page needs (evd-*). */
+
+.evd {
+  --evd-ink: #12382e;
+  --evd-muted: #5f7a70;
+  --evd-card: #ffffff;
+  --evd-soft: #eef5e6;
+  --evd-line: #c9dcc0;
+  --evd-teal: #0d6b5c;
+  --evd-gold-soft: #fdf0cf;
+  --evd-gold-ink: #7a5600;
+}
+
+/* Change these selectors if your ThemeSwitcher uses a different dark marker */
+.dark .evd,
+[data-theme="dark"] .evd {
+  --evd-ink: #e6f2e3;
+  --evd-muted: #9bb8aa;
+  --evd-card: #1a3329;
+  --evd-soft: #142a21;
+  --evd-line: #2c4a3d;
+  --evd-teal: #2fa58f;
+  --evd-gold-soft: #3a2f10;
+  --evd-gold-ink: #f3d98a;
+}
+
+.evd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--evd-muted);
+  transition: color 0.2s;
+}
+.evd-back:hover {
+  color: var(--evd-teal);
+}
+
+.evd-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.evd-ended {
+  display: inline-flex;
+  align-items: center;
+  background: var(--evd-gold-soft);
+  color: var(--evd-gold-ink);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.evd-meta {
+  list-style: none;
+  margin: 18px 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+.evd-meta li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--evd-ink);
+}
+.evd-meta .evd-ic {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--evd-soft);
+  color: var(--evd-teal);
+  display: grid;
+  place-items: center;
+}
+.evd-meta small {
+  display: block;
+  font-size: 11px;
+  color: var(--evd-muted);
+}
+.evd-meta b {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.evd-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--evd-muted);
+}
+.evd-count strong {
+  display: inline-block;
+  color: var(--evd-ink);
+  font-size: 17px;
+}
+
+/* Right-side art panel: event photo instead of the illustration */
+.evd-art {
+  position: relative;
+  min-height: 480px;
+  overflow: hidden;
+}
+.evd-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: #cfe6a6;
+}
+.evd-photo--empty {
+  display: grid;
+  place-items: center;
+  color: #3f9a58;
+  background: linear-gradient(180deg, #e9f4c8, #a8d492);
+}
+
+.evd-join {
+  width: 100%;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  transition: transform 0.15s, background 0.25s, color 0.25s;
+}
+.evd-join:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.evd-join[data-joined="true"] {
+  background: var(--evd-teal);
+  color: #fff;
+  box-shadow: none;
+}
+.evd-join:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.evd-leave {
+  display: block;
+  margin: 8px auto 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--evd-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.evd-notice {
+  margin: 8px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--evd-teal);
+  min-height: 1.2em;
+}
+
+/* Body */
+.evd-cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 22px;
+  margin-bottom: 22px;
+  align-items: start;
+}
+.evd-panel {
+  background: var(--evd-card);
+  color: var(--evd-ink);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 6px 22px rgba(13, 60, 45, 0.07);
+}
+.evd-panel h2 {
+  margin: 0 0 4px;
+  font-size: 21px;
+}
+.evd-sub {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--evd-muted);
+}
+.evd-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.evd-org {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.evd-avatar {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--evd-teal);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+.evd-org b {
+  display: block;
+}
+.evd-org small {
+  color: var(--evd-muted);
+}
+.evd-place {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--evd-line);
+  font-size: 14px;
+}
+
+.evd-related {
+  margin-bottom: 22px;
+}
+.evd-related-head {
+  margin: 0 6px 14px;
+}
+.evd-skel-hero {
+  height: 480px;
+  border-radius: 28px;
+}
+
+@media (max-width: 860px) {
+  .evd-cols {
+    grid-template-columns: 1fr;
+  }
+  .evd-art {
+    min-height: 360px;
+  }
+}
+@media (max-width: 480px) {
+  .evd-meta {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .evd * {
+    transition: none !important;
+  }
+}

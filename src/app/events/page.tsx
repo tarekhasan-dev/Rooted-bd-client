@@ -1,21 +1,24 @@
 "use client";
 
+import "@/styles/events.css";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  ArrowUpRight,
   CalendarDays,
+  Leaf,
   MapPin,
+  RefreshCw,
   Search,
   Sprout,
   Users,
-  RefreshCw,
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
 
 import { api } from "@/lib/api";
+import { useLang } from "@/components/LanguageProvider";
 
 interface Event {
   _id: string;
@@ -29,29 +32,69 @@ interface Event {
   creatorEmail: string;
 }
 
-const ALL_CATEGORIES = "All Events";
+// Change these two if your routes are different.
+const CREATE_EVENT_HREF = "/create-event";
+const JOIN_HREF = "/signup";
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+// Internal value for the "All Events" chip (the visible label is translated).
+const ALL = "__all__";
 
-  if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+function Illustration() {
+  return (
+    <svg
+      viewBox="0 0 440 560"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <rect width="440" height="560" fill="#e3f2c8" />
+      <circle cx="345" cy="88" r="92" fill="#fbe08a" opacity=".45" />
+      <circle cx="345" cy="88" r="44" fill="#fbd56b" />
+      <ellipse cx="92" cy="118" rx="60" ry="14" fill="#fff" opacity=".85" />
+      <ellipse cx="150" cy="104" rx="34" ry="10" fill="#fff" opacity=".85" />
+      <path d="M0 300 Q120 244 240 290 T440 274 V560 H0Z" fill="#c3e1a6" />
+      <path d="M0 340 Q150 292 300 334 T440 320 V560 H0Z" fill="#a8d492" />
+      <rect x="44" y="150" width="10" height="230" fill="#7a4a2a" />
+      <circle cx="32" cy="172" r="54" fill="#4f9d5d" />
+      <circle cx="82" cy="198" r="34" fill="#63ad6f" />
+      <rect x="394" y="236" width="9" height="140" fill="#7a4a2a" />
+      <circle cx="398" cy="226" r="40" fill="#4f9d5d" />
+      <path d="M0 372 Q220 352 440 376 V560 H0Z" fill="#8a4b2b" />
+      <circle cx="214" cy="230" r="21" fill="#2b2b3a" />
+      <circle cx="214" cy="238" r="16" fill="#e9a47c" />
+      <path d="M176 372 Q180 270 214 262 Q248 270 252 372Z" fill="#d85a40" />
+      <rect x="262" y="318" width="42" height="40" rx="6" fill="#4a7fb5" />
+      <path
+        d="M232 300 L264 322"
+        stroke="#e9a47c"
+        strokeWidth="9"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export default function EventsPage() {
+  const { t, lang } = useLang();
+
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] =
-    useState(ALL_CATEGORIES);
+  const [activeCategory, setActiveCategory] = useState(ALL);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return t("date_unavailable");
+    }
+
+    return date.toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   // Fetch upcoming events from backend
   const fetchEvents = useCallback(async () => {
@@ -61,15 +104,9 @@ export default function EventsPage() {
 
       const response = await api("/events");
 
-      setEvents(
-        Array.isArray(response.events) ? response.events : []
-      );
+      setEvents(Array.isArray(response.events) ? response.events : []);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load events. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "");
     } finally {
       setLoading(false);
     }
@@ -79,42 +116,38 @@ export default function EventsPage() {
     void fetchEvents();
   }, [fetchEvents]);
 
-  // Generate categories dynamically from database
+  // Categories come from the database
   const categories = useMemo(() => {
     const categoryMap = new Map<string, string>();
 
     events.forEach((event) => {
       const category = String(event.eventType ?? "").trim();
-
       if (!category) return;
 
-      const normalizedCategory = category.toLowerCase();
-
-      if (!categoryMap.has(normalizedCategory)) {
-        categoryMap.set(normalizedCategory, category);
-      }
+      const key = category.toLowerCase();
+      if (!categoryMap.has(key)) categoryMap.set(key, category);
     });
 
-    const dynamicCategories = Array.from(
-      categoryMap.values()
-    ).sort((a, b) => a.localeCompare(b));
+    const dynamic = Array.from(categoryMap.values()).sort((a, b) =>
+      a.localeCompare(b)
+    );
 
-    return [ALL_CATEGORIES, ...dynamicCategories];
+    return [ALL, ...dynamic];
   }, [events]);
 
   // Reset category if it no longer exists
   useEffect(() => {
     if (!categories.includes(activeCategory)) {
-      setActiveCategory(ALL_CATEGORIES);
+      setActiveCategory(ALL);
     }
   }, [categories, activeCategory]);
 
-  // Search and category filtering
+  // Search + category filtering
   const filteredEvents = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const q = searchTerm.trim().toLowerCase();
 
     return events.filter((event) => {
-      const searchableFields = [
+      const fields = [
         event.title,
         event.description,
         event.location,
@@ -123,412 +156,287 @@ export default function EventsPage() {
       ];
 
       const matchesSearch =
-        normalizedSearch === "" ||
-        searchableFields.some((field) =>
-          String(field ?? "")
-            .toLowerCase()
-            .includes(normalizedSearch)
-        );
+        q === "" ||
+        fields.some((f) => String(f ?? "").toLowerCase().includes(q));
 
-      const normalizedEventType = String(
-        event.eventType ?? ""
-      )
-        .trim()
-        .toLowerCase();
+      const type = String(event.eventType ?? "").trim().toLowerCase();
 
       const matchesCategory =
-        activeCategory === ALL_CATEGORIES ||
-        normalizedEventType === activeCategory.toLowerCase();
+        activeCategory === ALL || type === activeCategory.toLowerCase();
 
       return matchesSearch && matchesCategory;
     });
   }, [events, searchTerm, activeCategory]);
 
-  // Clear filters
   const clearFilters = () => {
     setSearchTerm("");
-    setActiveCategory(ALL_CATEGORIES);
+    setActiveCategory(ALL);
   };
 
-  const hasActiveFilters =
-    searchTerm.trim() !== "" ||
-    activeCategory !== ALL_CATEGORIES;
+  const hasActiveFilters = searchTerm.trim() !== "" || activeCategory !== ALL;
+
+  const countText = t("evp_count")
+    .replace("{shown}", String(filteredEvents.length))
+    .replace("{total}", String(events.length));
 
   return (
-    <main className="min-h-screen bg-[#fafaf7] text-[#18352b]">
-      {/* HERO SECTION */}
-
-      <section className="relative overflow-hidden bg-[#18352b] px-5 pb-20 pt-28 text-white md:px-10 md:pb-28 md:pt-36">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[#d8e8b8]/10 blur-3xl" />
-
-        <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#78945c]/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl"
-          >
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold tracking-[0.18em] text-[#d8e8b8]">
-              <Sprout size={15} />
-              COMMUNITY STARTS HERE
-            </span>
-
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
-              Find your purpose.
-              <br />
-              <span className="text-[#c8dc9c]">
-                Make a difference.
+    <main className="ev-page">
+      <div className="ev-wrap">
+        {/* HERO: split card, same layout as the login page */}
+        <section className="ev-hero">
+          <div className="ev-hero-left">
+            <div className="ev-logo-row">
+              <span className="ev-logo-icon">
+                <Leaf size={20} />
               </span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/70 md:text-lg">
-              Discover meaningful community events, meet
-              people who share your values and turn small
-              actions into positive change.
-            </p>
-
-            <div className="mt-9 flex flex-wrap gap-6 text-sm text-white/75">
-              <span className="flex items-center gap-2">
-                <CalendarDays size={17} />
-                Meaningful Activities
-              </span>
-
-              <span className="flex items-center gap-2">
-                <Users size={17} />
-                Stronger Communities
+              <span className="ev-display ev-logo-text">
+                rooted<span className="ev-logo-dot">.</span>
+                <small>BD</small>
               </span>
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* EVENTS SECTION */}
+            <h1 className="ev-display ev-title">{t("evp_title")}</h1>
+            <p className="ev-lead">{t("evp_lead")}</p>
 
-      <section className="px-5 py-16 md:px-10 md:py-24">
-        <div className="mx-auto max-w-7xl">
+            <ul className="ev-perks">
+              <li>
+                <CalendarDays size={16} />
+                {t("evp_perk_1")}
+              </li>
+              <li>
+                <Users size={16} />
+                {t("evp_perk_2")}
+              </li>
+            </ul>
 
-          {/* SECTION HEADING */}
+            <label className="ev-label" htmlFor="ev-search">
+              {t("evp_search_label")}
+            </label>
 
-          <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <span className="mb-3 flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-[#78945c]">
-                <CalendarDays size={15} />
-                EXPLORE OPPORTUNITIES
-              </span>
-
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                Upcoming Events
-              </h2>
-
-              <p className="mt-3 max-w-xl text-sm leading-7 text-gray-500 md:text-base">
-                Find an opportunity that inspires you.
-                Every contribution makes a difference.
-              </p>
-            </div>
-
-            <Link
-              href="/create-event"
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-            >
-              Host an Event
-              <ArrowUpRight size={17} />
-            </Link>
-          </div>
-
-          {/* SEARCH */}
-
-          <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="relative w-full md:max-w-md">
-              <Search
-                size={19}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+            <div className="ev-search">
+              <Search size={18} className="ev-search-icon" />
 
               <input
-                type="search"
-                placeholder="Search events, locations, categories..."
+                id="ev-search"
+                type="text"
+                className="ev-input"
+                placeholder={t("evp_search_ph")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white py-3.5 pl-12 pr-12 text-sm outline-none transition focus:border-[#78945c] focus:ring-2 focus:ring-[#78945c]/10"
               />
 
               {searchTerm && (
                 <button
                   type="button"
+                  className="ev-search-clear"
                   onClick={() => setSearchTerm("")}
-                  aria-label="Clear search"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-[#18352b]"
+                  aria-label={t("evp_clear_search")}
                 >
                   <X size={18} />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>
-                {loading
-                  ? "Loading events..."
-                  : `${filteredEvents.length} of ${events.length} events`}
+            <span className="ev-label">{t("evp_category")}</span>
+
+            <div className="ev-chips">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className="ev-chip"
+                  aria-pressed={activeCategory === category}
+                  onClick={() => setActiveCategory(category)}
+                >
+                  {category === ALL ? t("evp_all") : category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="ev-art">
+            <Illustration />
+
+            <div className="ev-inset">
+              <span className="ev-pill">
+                <Leaf size={12} />
+                {t("community")}
               </span>
+
+              <h2>{t("evp_card_title")}</h2>
+              <p>{t("evp_card_text")}</p>
+
+              <Link href={CREATE_EVENT_HREF} className="ev-amber">
+                {t("host_event")}
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* RESULTS */}
+        <section className="ev-results" aria-live="polite">
+          <div className="ev-results-head">
+            <div>
+              <h2 className="ev-display ev-h2">{t("evp_section_title")}</h2>
+              <p className="ev-sub">{t("evp_section_text")}</p>
+            </div>
+
+            <div className="ev-count">
+              <span>{loading ? t("evp_loading") : countText}</span>
 
               {!loading && hasActiveFilters && (
                 <button
                   type="button"
+                  className="ev-link-btn"
                   onClick={clearFilters}
-                  className="font-semibold text-[#78945c] transition hover:text-[#18352b]"
                 >
-                  Clear filters
+                  {t("evp_clear_filters")}
                 </button>
               )}
             </div>
           </div>
 
-          {/* CATEGORY FILTER */}
-
-          <div className="mb-10">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-bold tracking-[0.12em] text-gray-400">
-                FILTER BY CATEGORY
-              </span>
-
-              <span className="text-xs text-gray-400">
-                {categories.length - 1} categories available
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setActiveCategory(category)}
-                  aria-pressed={activeCategory === category}
-                  className={`rounded-full px-5 py-2.5 text-sm font-medium transition ${
-                    activeCategory === category
-                      ? "bg-[#18352b] text-white shadow-sm"
-                      : "border border-gray-200 bg-white text-gray-600 hover:border-[#78945c] hover:text-[#18352b]"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* LOADING SKELETON */}
-
+          {/* LOADING */}
           {loading && (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="overflow-hidden rounded-2xl border border-gray-100 bg-white"
-                >
-                  <div className="h-56 animate-pulse bg-gray-200" />
-
-                  <div className="space-y-4 p-6">
-                    <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                    <div className="h-6 w-3/4 animate-pulse rounded bg-gray-200" />
-                    <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-                  </div>
-                </div>
+            <div className="ev-grid">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="ev-skel" />
               ))}
             </div>
           )}
 
-          {/* ERROR STATE */}
-
-          {!loading && error && (
-            <div className="rounded-2xl border border-red-100 bg-white px-6 py-16 text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
-                <RefreshCw size={27} />
-              </div>
-
-              <h3 className="text-xl font-semibold">
-                Something went wrong
-              </h3>
-
-              <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-gray-500">
-                {error}
-              </p>
-
+          {/* ERROR */}
+          {!loading && error !== "" && (
+            <div className="ev-empty">
+              <span className="ev-empty-icon">
+                <RefreshCw size={26} />
+              </span>
+              <h3>{t("evp_error_title")}</h3>
+              <p>{error || t("evp_load_failed")}</p>
               <button
                 type="button"
+                className="ev-btn ev-btn-wide"
                 onClick={() => void fetchEvents()}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
               >
                 <RefreshCw size={16} />
-                Try Again
+                {t("evp_try_again")}
               </button>
             </div>
           )}
 
-          {/* EMPTY STATE */}
-
-          {!loading && !error && filteredEvents.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#edf2e5] text-[#78945c]">
+          {/* EMPTY */}
+          {!loading && error === "" && filteredEvents.length === 0 && (
+            <div className="ev-empty">
+              <span className="ev-empty-icon">
                 {events.length === 0 ? (
-                  <CalendarDays size={34} />
+                  <CalendarDays size={28} />
                 ) : (
-                  <Search size={34} />
+                  <Search size={28} />
                 )}
-              </div>
+              </span>
 
-              <h3 className="text-2xl font-semibold">
+              <h3>
                 {events.length === 0
-                  ? "No upcoming events yet."
-                  : "No matching events found."}
+                  ? t("evp_empty_title")
+                  : t("evp_nomatch_title")}
               </h3>
 
-              <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-gray-500">
+              <p>
                 {events.length === 0
-                  ? "Be the first to bring your community together. Create an event and inspire positive change."
-                  : "Try another search term or choose a different category to discover available events."}
+                  ? t("evp_empty_text")
+                  : t("evp_nomatch_text")}
               </p>
 
               {events.length === 0 ? (
-                <Link
-                  href="/create-event"
-                  className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-                >
-                  Create an Event
-                  <ArrowRight size={17} />
+                <Link href={CREATE_EVENT_HREF} className="ev-btn ev-btn-wide">
+                  {t("evp_create")}
+                  <ArrowRight size={16} />
                 </Link>
               ) : (
                 <button
                   type="button"
+                  className="ev-btn ev-btn-wide"
                   onClick={clearFilters}
-                  className="mt-7 rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold transition hover:bg-gray-100"
                 >
-                  Clear Filters
+                  {t("evp_clear_filters")}
                 </button>
               )}
             </div>
           )}
 
           {/* EVENT CARDS */}
-
-          {!loading && !error && filteredEvents.length > 0 && (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          {!loading && error === "" && filteredEvents.length > 0 && (
+            <div className="ev-grid">
               {filteredEvents.map((event, index) => (
                 <motion.article
                   key={event._id}
-                  initial={{ opacity: 0, y: 25 }}
+                  className="ev-card"
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.45,
-                    delay: index * 0.08,
-                  }}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05 }}
                 >
-                  {/* EVENT IMAGE */}
-
-                  <div className="relative h-56 overflow-hidden bg-[#e8eddf]">
-                    {event.thumbnail ? (
-                      <div
-                        role="img"
-                        aria-label={event.title}
-                        className="h-full w-full bg-cover bg-center transition duration-700 group-hover:scale-110"
-                        style={{
-                          backgroundImage: `url("${event.thumbnail}")`,
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[#78945c]">
-                        <Sprout size={55} />
-                      </div>
-                    )}
-
-                    <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-[#315b47] shadow-sm">
-                      {event.eventType || "Community"}
-                    </span>
+                  <div
+                    className="ev-thumb"
+                    role={event.thumbnail ? "img" : undefined}
+                    aria-label={event.thumbnail ? event.title : undefined}
+                    style={
+                      event.thumbnail
+                        ? { backgroundImage: `url("${event.thumbnail}")` }
+                        : undefined
+                    }
+                  >
+                    {!event.thumbnail && <Sprout size={54} />}
                   </div>
 
-                  {/* EVENT INFORMATION */}
+                  <div className="ev-card-body">
+                    <span className="ev-pill">
+                      {event.eventType || t("type_default")}
+                    </span>
 
-                  <div className="p-6">
-                    <div className="mb-4 flex items-center gap-2 text-xs font-medium text-[#78945c]">
-                      <CalendarDays size={15} />
-                      {formatDate(event.eventDate)}
-                    </div>
+                    <h3>{event.title}</h3>
 
-                    <h3 className="line-clamp-2 text-xl font-semibold leading-snug transition group-hover:text-[#78945c]">
-                      {event.title}
-                    </h3>
+                    <p className="ev-desc">{event.description}</p>
 
-                    <p className="mt-3 line-clamp-2 text-sm leading-7 text-gray-500">
-                      {event.description}
+                    <ul className="ev-meta">
+                      <li>
+                        <CalendarDays size={15} />
+                        <span>{formatDate(event.eventDate)}</span>
+                      </li>
+                      <li>
+                        <MapPin size={15} />
+                        <span>{event.location}</span>
+                      </li>
+                    </ul>
+
+                    <p className="ev-by">
+                      {t("evp_organized_by")}
+                      <strong>{event.creatorName || t("evp_member")}</strong>
                     </p>
 
-                    <div className="mt-5 flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin
-                        size={16}
-                        className="shrink-0 text-[#78945c]"
-                      />
-                      <span className="line-clamp-1">
-                        {event.location}
-                      </span>
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5">
-                      <div className="min-w-0">
-                        <span className="text-xs text-gray-400">
-                          Organized by
-                        </span>
-
-                        <p className="truncate text-sm font-semibold text-[#315b47]">
-                          {event.creatorName || "Community Member"}
-                        </p>
-                      </div>
-
-                      <Link
-                        href={`/events/${event._id}`}
-                        aria-label={`View details for ${event.title}`}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#edf2e5] text-[#315b47] transition hover:bg-[#18352b] hover:text-white"
-                      >
-                        <ArrowUpRight size={20} />
-                      </Link>
-                    </div>
+                    <Link href={`/events/${event._id}`} className="ev-btn">
+                      {t("view_event")}
+                    </Link>
                   </div>
                 </motion.article>
               ))}
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* BOTTOM CTA */}
-
-      <section className="bg-[#edf2e5] px-5 py-16 md:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 md:flex-row md:items-center">
+        {/* BOTTOM CTA */}
+        <section className="ev-cta">
           <div>
-            <span className="text-xs font-bold tracking-[0.18em] text-[#78945c]">
-              BE PART OF SOMETHING GOOD
-            </span>
-
-            <h2 className="mt-3 text-3xl font-semibold leading-tight">
-              Your community needs you.
-            </h2>
-
-            <p className="mt-3 max-w-xl text-sm leading-7 text-gray-600">
-              Share an idea, organize an activity and bring
-              people together for a better Bangladesh.
-            </p>
+            <h2 className="ev-display">{t("evp_cta_title")}</h2>
+            <p>{t("evp_cta_text")}</p>
           </div>
 
-          <Link
-            href="/register"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#18352b] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-          >
-            Join the Community
-            <ArrowRight size={18} />
+          <Link href={JOIN_HREF} className="ev-amber">
+            {t("join_community")}
+            <ArrowRight size={16} />
           </Link>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

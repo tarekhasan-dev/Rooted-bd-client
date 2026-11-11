@@ -1,6 +1,7 @@
 /**
  * Animated hero illustration for rooted.BD
  * All motion is CSS-driven (see styles/hero.css), so no client hooks needed.
+ * Colors come from CSS variables (--sc-*) so light/dark palettes live in hero.css.
  */
 
 import "@/styles/hero.css";
@@ -15,20 +16,20 @@ export default function HeroScene() {
     >
       <defs>
         <radialGradient id="rbSun">
-          <stop offset="0" stopColor="#ffe08a" stopOpacity=".9" />
-          <stop offset="1" stopColor="#ffe08a" stopOpacity="0" />
+          <stop offset="0" style={{ stopColor: "var(--sc-sun-glow)" }} stopOpacity=".9" />
+          <stop offset="1" style={{ stopColor: "var(--sc-sun-glow)" }} stopOpacity="0" />
         </radialGradient>
         <linearGradient id="rbH1" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#cfe6c8" />
-          <stop offset="1" stopColor="#e6f2e1" />
+          <stop offset="0" style={{ stopColor: "var(--sc-hill1-a)" }} />
+          <stop offset="1" style={{ stopColor: "var(--sc-hill1-b)" }} />
         </linearGradient>
         <linearGradient id="rbH2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#b5d6ad" />
-          <stop offset="1" stopColor="#dcecd5" />
+          <stop offset="0" style={{ stopColor: "var(--sc-hill2-a)" }} />
+          <stop offset="1" style={{ stopColor: "var(--sc-hill2-b)" }} />
         </linearGradient>
         <linearGradient id="rbSoil" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#a45a34" />
-          <stop offset="1" stopColor="#6a3520" />
+          <stop offset="0" style={{ stopColor: "var(--sc-soil-a)" }} />
+          <stop offset="1" style={{ stopColor: "var(--sc-soil-b)" }} />
         </linearGradient>
         <linearGradient id="rbLeaf" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#8fdc98" />
@@ -40,17 +41,17 @@ export default function HeroScene() {
         </linearGradient>
       </defs>
 
-      {/* sun (moved down 25 + smaller glow so nothing is clipped) */}
+      {/* sun */}
       <g transform="translate(0 25)">
         <g className="sun-glow">
           <circle cx="860" cy="150" r="68" fill="url(#rbSun)" />
         </g>
         <g
           className="sun-rays"
-          stroke="#ffd166"
           strokeWidth="4"
           strokeLinecap="round"
           opacity=".7"
+          style={{ stroke: "var(--sc-sun)" }}
         >
           <line x1="860" y1="90" x2="860" y2="104" />
           <line x1="860" y1="196" x2="860" y2="210" />
@@ -61,15 +62,15 @@ export default function HeroScene() {
           <line x1="902" y1="108" x2="892" y2="118" />
           <line x1="828" y1="182" x2="818" y2="192" />
         </g>
-        <circle cx="860" cy="150" r="30" fill="#ffd166" />
+        <circle cx="860" cy="150" r="30" style={{ fill: "var(--sc-sun)" }} />
       </g>
 
       {/* clouds */}
-      <g className="cloud" fill="#fff" opacity=".9">
+      <g className="cloud" opacity=".9" style={{ fill: "var(--sc-cloud)" }}>
         <ellipse cx="170" cy="130" rx="60" ry="14" />
         <ellipse cx="200" cy="120" rx="34" ry="14" />
       </g>
-      <g className="cloud c2" fill="#fff" opacity=".8">
+      <g className="cloud c2" opacity=".8" style={{ fill: "var(--sc-cloud)" }}>
         <ellipse cx="560" cy="118" rx="50" ry="11" />
         <ellipse cx="585" cy="110" rx="26" ry="11" />
       </g>
@@ -80,10 +81,10 @@ export default function HeroScene() {
           <g
             className="wing"
             fill="none"
-            stroke="#1b4332"
             strokeWidth="2"
             strokeLinecap="round"
             opacity=".55"
+            style={{ stroke: "var(--sc-bird)" }}
           >
             <path d="M0 0q7-8 14 0q7-8 14 0" />
           </g>
@@ -94,10 +95,10 @@ export default function HeroScene() {
           <g
             className="wing"
             fill="none"
-            stroke="#1b4332"
             strokeWidth="2"
             strokeLinecap="round"
             opacity=".4"
+            style={{ stroke: "var(--sc-bird)" }}
           >
             <path d="M0 0q5-6 10 0q5-6 10 0" />
           </g>
@@ -111,25 +112,25 @@ export default function HeroScene() {
       {/* background trees */}
       <g className="sway">
         <rect x="118" y="200" width="11" height="100" rx="5" fill="#6b4a36" />
-        <circle cx="123" cy="178" r="40" fill="#4f9660" />
-        <circle cx="98" cy="200" r="26" fill="#5fa36b" />
-        <circle cx="150" cy="198" r="28" fill="#6fae78" />
+        <circle cx="123" cy="178" r="40" style={{ fill: "var(--sc-tree1)" }} />
+        <circle cx="98" cy="200" r="26" style={{ fill: "var(--sc-tree2)" }} />
+        <circle cx="150" cy="198" r="28" style={{ fill: "var(--sc-tree3)" }} />
       </g>
       <g className="sway b">
         <rect x="888" y="215" width="10" height="85" rx="5" fill="#6b4a36" />
-        <circle cx="893" cy="195" r="36" fill="#4a8f5b" />
-        <circle cx="870" cy="214" r="22" fill="#5fa36b" />
-        <circle cx="916" cy="212" r="24" fill="#6fae78" />
+        <circle cx="893" cy="195" r="36" style={{ fill: "var(--sc-tree1)" }} />
+        <circle cx="870" cy="214" r="22" style={{ fill: "var(--sc-tree2)" }} />
+        <circle cx="916" cy="212" r="24" style={{ fill: "var(--sc-tree3)" }} />
       </g>
       <g className="sway c">
         <rect x="248" y="228" width="7" height="68" rx="3" fill="#6b4a36" />
-        <circle cx="251" cy="212" r="26" fill="#7dbb85" />
-        <circle cx="236" cy="226" r="16" fill="#8cc794" />
+        <circle cx="251" cy="212" r="26" style={{ fill: "var(--sc-tree4)" }} />
+        <circle cx="236" cy="226" r="16" style={{ fill: "var(--sc-tree5)" }} />
       </g>
       <g className="sway">
         <rect x="772" y="232" width="7" height="66" rx="3" fill="#6b4a36" />
-        <circle cx="775" cy="216" r="24" fill="#6fae78" />
-        <circle cx="790" cy="230" r="15" fill="#86c28d" />
+        <circle cx="775" cy="216" r="24" style={{ fill: "var(--sc-tree3)" }} />
+        <circle cx="790" cy="230" r="15" style={{ fill: "var(--sc-tree5)" }} />
       </g>
 
       {/* ground */}
@@ -180,7 +181,6 @@ export default function HeroScene() {
         <path d="M210 276Q238 248 268 272L300 276L300 284L212 284Z" fill="#f2b52a" />
         <circle cx="250" cy="284" r="2" fill="#2b2410" />
         <circle cx="256" cy="292" r="4" fill="#f4a08a" opacity=".6" />
-        {/* smile */}
         <path
           d="M250 297q6 4 12-2"
           stroke="#8a3a2a"
@@ -218,7 +218,6 @@ export default function HeroScene() {
         <circle cx="508" cy="200" r="25" fill="#e9a77a" />
         <circle cx="498" cy="200" r="2" fill="#2b2410" />
         <circle cx="494" cy="210" r="4" fill="#f4a08a" opacity=".6" />
-        {/* smile */}
         <path
           d="M490 215q6 5 12 0"
           stroke="#8a3a2a"
@@ -250,7 +249,6 @@ export default function HeroScene() {
         <rect x="738" y="374" width="30" height="14" rx="4" fill="#f2b52a" />
         <path d="M696 312Q696 252 728 250Q764 252 764 312Z" fill="#fff" />
         <circle cx="730" cy="222" r="25" fill="#8a5a3f" />
-        {/* eye + smile */}
         <circle cx="720" cy="221" r="2" fill="#2b1a10" />
         <path
           d="M712 231q6 5 12 0"

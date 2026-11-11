@@ -1,6 +1,10 @@
 "use client";
 
-import { CalendarDays, Pencil, UserRound } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, UserRound } from "lucide-react";
+
+import { useLang } from "@/components/LanguageProvider";
+import CardShell, { InfoField } from "@/components/profile/CardShell";
 
 import type { UserProfile } from "@/types/profile";
 
@@ -9,103 +13,98 @@ interface PersonalInfoCardProps {
   onEdit?: () => void;
 }
 
+const BIO_LIMIT = 220;
+
 export default function PersonalInfoCard({
   user,
   onEdit,
 }: PersonalInfoCardProps) {
+  const { t, lang } = useLang();
+  const [expanded, setExpanded] = useState(false);
+
+  const isBangla = lang === "bn";
+
+  // Format Date According to Selected Language
   const formatDate = (date?: string) => {
-    if (!date) return "Not provided";
+    if (!date) return t("pr_not_provided");
 
     const parsedDate = new Date(date);
 
     if (Number.isNaN(parsedDate.getTime())) {
-      return "Not provided";
+      return t("pr_not_provided");
     }
 
-    return parsedDate.toLocaleDateString("en-GB", {
+    return parsedDate.toLocaleDateString(isBangla ? "bn-BD" : "en-GB", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
   };
 
-  const fields = [
-    {
-      label: "Full Name",
-      value: user.name || "Not provided",
-      icon: UserRound,
-    },
-    {
-      label: "Date of Birth",
-      value: formatDate(user.dateOfBirth),
-      icon: CalendarDays,
-    },
-    {
-      label: "Gender",
-      value: user.gender || "Not provided",
-      icon: UserRound,
-    },
-  ];
+  const bio = user.bio?.trim() ?? "";
+  const isLongBio = bio.length > BIO_LIMIT;
+  const visibleBio =
+    isLongBio && !expanded ? `${bio.slice(0, BIO_LIMIT).trimEnd()}…` : bio;
 
   return (
-    <section className="rounded-3xl border border-[#e1ece5] bg-white p-5 shadow-sm sm:p-7">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf2e5] text-[#267a44]">
-              <UserRound size={20} />
+    <CardShell
+      icon={UserRound}
+      title={t("pr_personal_title")}
+      subtitle={t("pr_personal_subtitle")}
+      onEdit={onEdit}
+    >
+      {/* Personal Information Fields */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <InfoField
+          label={t("pr_full_name")}
+          value={user.name || t("pr_not_provided")}
+          icon={UserRound}
+        />
+
+        <InfoField
+          label={t("pr_date_of_birth")}
+          value={formatDate(user.dateOfBirth)}
+          icon={CalendarDays}
+        />
+
+        <InfoField
+          label={t("pr_gender")}
+          value={
+            <span className="capitalize">
+              {user.gender || t("pr_not_provided")}
             </span>
+          }
+          icon={UserRound}
+        />
+      </div>
 
-            <div>
-              <h2 className="text-lg font-bold text-[#18352b]">
-                Personal Information
-              </h2>
-              <p className="text-xs text-gray-500">
-                Your personal details
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* About Me */}
+      <div className="mt-7 border-t border-[#e1ece5] pt-5 dark:border-gray-800">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+          {t("pr_about_me")}
+        </p>
 
-        {onEdit && (
+        <p className="whitespace-pre-wrap break-words text-sm leading-7 text-gray-600 dark:text-gray-300">
+          {visibleBio || t("pr_no_bio")}
+        </p>
+
+        {isLongBio && (
           <button
             type="button"
-            onClick={onEdit}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#e1ece5] px-3 py-2 text-sm font-semibold text-[#267a44] transition hover:bg-[#f4f8f5]"
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
+            className="mt-2 text-xs font-semibold text-[#267a44] hover:underline dark:text-[#75d69a]"
           >
-            <Pencil size={15} />
-            <span className="hidden sm:inline">Edit</span>
+            {expanded
+              ? isBangla
+                ? "কম দেখুন"
+                : "Show less"
+              : isBangla
+                ? "আরও দেখুন"
+                : "Read more"}
           </button>
         )}
       </div>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {fields.map(({ label, value, icon: Icon }) => (
-          <div key={label}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              {label}
-            </p>
-
-            <div className="flex items-center gap-3">
-              <Icon size={17} className="shrink-0 text-[#78945c]" />
-
-              <p className="break-words text-sm font-medium text-[#18352b]">
-                {value}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-7 border-t border-[#e1ece5] pt-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          About Me
-        </p>
-
-        <p className="whitespace-pre-wrap text-sm leading-7 text-gray-600">
-          {user.bio?.trim() || "No bio added yet."}
-        </p>
-      </div>
-    </section>
+    </CardShell>
   );
 }

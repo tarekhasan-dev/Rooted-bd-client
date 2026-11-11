@@ -5,26 +5,25 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  BookOpen,
   CalendarDays,
   CheckCircle2,
-  ChevronRight,
   Globe2,
-  HandHeart,
   Heart,
   Leaf,
   MapPin,
-  Recycle,
   ShieldCheck,
   Sprout,
-  TreePine,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 
+import CategoriesSection from "@/components/CategoriesSection";
 import HeroScene from "@/components/HeroScene";
 import PageWind from "@/components/PageWind";
+import { useLang } from "@/components/LanguageProvider";
 import { api } from "@/lib/api";
+import type { TKey } from "@/lib/i18n";
 
 interface EventItem {
   _id: string;
@@ -37,72 +36,32 @@ interface EventItem {
   creatorName?: string;
 }
 
-const categories = [
-  {
-    title: "Tree Plantation",
-    subtitle: "Plant today. Breathe better tomorrow.",
-    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900",
-    icon: TreePine,
-  },
-  {
-    title: "River & Community Cleanup",
-    subtitle: "Cleaner rivers. Healthier communities.",
-    image: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=900",
-    icon: Recycle,
-  },
-  {
-    title: "Education for All",
-    subtitle: "Share knowledge. Open possibilities.",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900",
-    icon: BookOpen,
-  },
-  {
-    title: "Community Support",
-    subtitle: "A little kindness goes a long way.",
-    image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=900",
-    icon: HandHeart,
-  },
+const features: {
+  number: string;
+  icon: LucideIcon;
+  titleKey: TKey;
+  descKey: TKey;
+}[] = [
+  { number: "01", icon: Sprout, titleKey: "f1_title", descKey: "f1_desc" },
+  { number: "02", icon: Users, titleKey: "f2_title", descKey: "f2_desc" },
+  { number: "03", icon: Globe2, titleKey: "f3_title", descKey: "f3_desc" },
 ];
 
-const features = [
-  {
-    number: "01",
-    icon: Sprout,
-    title: "Find Your Cause",
-    description:
-      "Discover local tree drives, river cleanups, educational initiatives and community activities that matter to you.",
-  },
-  {
-    number: "02",
-    icon: Users,
-    title: "Show Up Together",
-    description:
-      "Meet people who share your values, volunteer together and turn good intentions into meaningful action.",
-  },
-  {
-    number: "03",
-    icon: Globe2,
-    title: "Make a Difference",
-    description:
-      "Every hour, every helping hand and every small contribution can make a lasting difference in your neighbourhood.",
-  },
-];
-
-const gallery = [
+const gallery: { image: string; titleKey: TKey; catKey: TKey }[] = [
   {
     image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=900",
-    title: "Growing a Greener Bangladesh",
-    category: "ENVIRONMENT",
+    titleKey: "g1_title",
+    catKey: "g1_cat",
   },
   {
     image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900",
-    title: "Small Actions, Lasting Change",
-    category: "COMMUNITY",
+    titleKey: "g2_title",
+    catKey: "g2_cat",
   },
   {
     image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=900",
-    title: "A Better Tomorrow Starts Here",
-    category: "NATURE",
+    titleKey: "g3_title",
+    catKey: "g3_cat",
   },
 ];
 
@@ -111,14 +70,14 @@ const fadeUp = {
   visible: { opacity: 1, y: 0 },
 };
 
-const formatDate = (value: string) => {
+const formatDate = (value: string, locale: string, fallback: string) => {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
+    return fallback;
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -141,10 +100,13 @@ function XIcon({ size = 18 }: { size?: number }) {
 }
 
 export default function Home() {
+  const { t, lang } = useLang();
+  const locale = lang === "bn" ? "bn-BD" : "en-US";
+
   const [email, setEmail] = useState("");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [currentYear, setCurrentYear] = useState(2026);
 
   useEffect(() => {
@@ -165,11 +127,7 @@ export default function Home() {
         }
       } catch (err) {
         if (active) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Unable to load events right now."
-          );
+          setError(err instanceof Error ? err.message : "error");
         }
       } finally {
         if (active) {
@@ -206,24 +164,18 @@ export default function Home() {
             visible: { transition: { staggerChildren: 0.15 } },
           }}
         >
-          <motion.h1 variants={fadeUp}>
-            Show up. Plant something. Change your neighbourhood.
-          </motion.h1>
+          <motion.h1 variants={fadeUp}>{t("h_title")}</motion.h1>
 
-          <motion.p variants={fadeUp}>
-            From tree drives and river cleanups to community initiatives,
-            discover ways to make a difference right where you live.
-            Bangladesh gets better when we grow together.
-          </motion.p>
+          <motion.p variants={fadeUp}>{t("h_text")}</motion.p>
 
           <motion.div className="hero-cta" variants={fadeUp}>
             <Link href="/events" className="hero-btn hero-btn-solid">
-              Explore Events
+              {t("h_explore")}
               <ArrowRight size={16} style={{ marginLeft: 8 }} />
             </Link>
 
             <Link href="/create-event" className="hero-btn hero-btn-sun">
-              Host an Event
+              {t("host_event")}
             </Link>
           </motion.div>
 
@@ -231,19 +183,21 @@ export default function Home() {
             {loading ? (
               <span className="hero-pill">
                 <i />
-                Loading upcoming events...
+                {t("h_loading")}
               </span>
             ) : events.length === 0 ? (
               <Link href="/create-event" className="hero-pill hero-pill-cta">
                 <i />
-                Be the first to host an event in your area
+                {t("h_first")}
                 <ArrowRight size={14} />
               </Link>
             ) : (
               <span className="hero-pill">
                 <i />
-                {events.length} upcoming{" "}
-                {events.length === 1 ? "event" : "events"} available
+                {t(events.length === 1 ? "h_count_one" : "h_count_many").replace(
+                  "{n}",
+                  events.length.toLocaleString(locale)
+                )}
               </span>
             )}
           </motion.div>
@@ -252,103 +206,26 @@ export default function Home() {
         <HeroScene />
       </section>
 
-     
+      {/* CATEGORIES (new design) */}
+      <CategoriesSection />
 
-      {/* CATEGORIES */}
-      <section id="categories" className="section categories-section">
-        <div className="section-heading">
+      {/* MISSION */}
+      <section id="about" className="mission-section">
+        <div className="mission-container">
           <motion.div
+            className="mission-image-wrapper"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeUp}
           >
-            <span className="eyebrow">
-              <Leaf size={15} />
-              FIND YOUR WAY TO HELP
-            </span>
-
-            <h2>
-              There is more than
-              <br />
-              <span>one way to care.</span>
-            </h2>
-
-            <p>
-              Whether you love nature, education or helping people, there is a
-              place for you in our community.
-            </p>
-          </motion.div>
-
-          <Link href="/events" className="text-link">
-            Explore all events
-            <ArrowUpRight size={17} />
-          </Link>
-        </div>
-
-        <div className="category-grid">
-          {categories.map((category, index) => {
-            const Icon = category.icon;
-
-            return (
-              <motion.div
-                key={category.title}
-                className="category-card"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.2 }}
-                variants={fadeUp}
-                transition={{ delay: index * 0.12, duration: 0.6 }}
-              >
-                <Link
-                  href="/events"
-                  className="category-image"
-                  style={{ backgroundImage: `url(${category.image})` }}
-                >
-                  <div className="category-number">0{index + 1}</div>
-
-                  <div className="category-icon">
-                    <Icon size={21} />
-                  </div>
-
-                  <div className="category-arrow">
-                    <ArrowUpRight size={20} />
-                  </div>
-                </Link>
-
-                <div className="category-info">
-                  <div>
-                    <h3>{category.title}</h3>
-                    <p>{category.subtitle}</p>
-                  </div>
-
-                  <ChevronRight size={19} />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ABOUT / MISSION */}
-      <section id="about" className="mission-section">
-        <div className="mission-container">
-          <motion.div
-            className="mission-image-wrapper"
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
             <div className="mission-image" />
-
-            <div className="mission-image-label">
-              <Sprout size={22} />
-              <span>Rooted in purpose</span>
-            </div>
-
             <div className="mission-decor">
-              <Leaf size={34} />
+              <Heart size={26} />
+            </div>
+            <div className="mission-image-label">
+              <Leaf size={18} />
+              {t("m_label")}
             </div>
           </motion.div>
 
@@ -357,64 +234,41 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.15 } },
-            }}
+            variants={fadeUp}
           >
-            <motion.span className="eyebrow" variants={fadeUp}>
-              <Globe2 size={15} />
-              WHY ROOTED BD
-            </motion.span>
+            <span className="eyebrow">
+              <Leaf size={15} />
+              {t("m_eyebrow")}
+            </span>
 
-            <motion.h2 variants={fadeUp}>
-              Change starts
+            <h2>
+              {t("m_h2_a")}
               <br />
-              right in <span>your backyard.</span>
-            </motion.h2>
+              {t("m_h2_b")} <span>{t("m_h2_c")}</span>
+            </h2>
 
-            <motion.p variants={fadeUp}>
-              We believe that better neighbourhoods are built by people who
-              care enough to take action. A cleaner street, a planted tree or
-              a helping hand can be the beginning of something bigger.
-            </motion.p>
+            <p>{t("m_p1")}</p>
+            <p>{t("m_p2")}</p>
 
-            <motion.p variants={fadeUp}>
-              Rooted BD connects people with local initiatives across
-              Bangladesh, making it easier to discover events, bring
-              communities together and turn shared intentions into real-world
-              impact.
-            </motion.p>
+            <div className="mission-points">
+              {(["m_pt1", "m_pt2", "m_pt3"] as TKey[]).map((key) => (
+                <div key={key}>
+                  <CheckCircle2 size={18} />
+                  {t(key)}
+                </div>
+              ))}
+            </div>
 
-            <motion.div className="mission-points" variants={fadeUp}>
-              <div>
-                <CheckCircle2 size={19} />
-                Discover meaningful local activities
-              </div>
-
-              <div>
-                <CheckCircle2 size={19} />
-                Connect with people who care
-              </div>
-
-              <div>
-                <CheckCircle2 size={19} />
-                Create positive community impact
-              </div>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link href="/events" className="primary-button">
-                Discover Our Community
-                <ArrowRight size={18} />
-              </Link>
-            </motion.div>
+            <Link href="/signup" className="primary-button">
+              {t("m_btn")}
+              <ArrowRight size={16} />
+            </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="section process-section">
+      {/* PROCESS */}
+      <section className="section">
         <div className="section-heading centered-heading">
           <motion.div
             initial="hidden"
@@ -423,311 +277,157 @@ export default function Home() {
             variants={fadeUp}
           >
             <span className="eyebrow">
-              <Sprout size={15} />
-              FROM INTENTION TO ACTION
+              <Leaf size={15} />
+              {t("p_eyebrow")}
             </span>
 
             <h2>
-              Good things happen
+              {t("p_h2_a")}
               <br />
-              <span>when we show up.</span>
+              <span>{t("p_h2_b")}</span>
             </h2>
 
-            <p>
-              Getting involved does not have to be complicated. Find an event,
-              join the effort and make an impact.
-            </p>
+            <p>{t("p_text")}</p>
           </motion.div>
         </div>
 
         <div className="process-grid">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-
-            return (
-              <motion.div
-                key={feature.number}
-                className="process-card"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                transition={{ delay: index * 0.15 }}
-              >
-                <div className="process-top">
-                  <span>{feature.number}</span>
-
-                  <div className="process-icon">
-                    <Icon size={25} />
-                  </div>
+          {features.map(({ number, icon: Icon, titleKey, descKey }, i) => (
+            <motion.article
+              key={number}
+              className="process-card"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              variants={fadeUp}
+            >
+              <div className="process-top">
+                <span>{number}</span>
+                <div className="process-icon">
+                  <Icon size={24} />
                 </div>
-
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-
-                <div className="process-bottom">
-                  <span>ROOTED BD</span>
-                  <ArrowUpRight size={19} />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* RECENT UPCOMING EVENTS */}
-      <section className="events-section">
-        <div className="events-container">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">
-                <CalendarDays size={15} />
-                GOOD THINGS ARE HAPPENING
-              </span>
-
-              <h2>
-                Find an event.
-                <br />
-                <span>Be part of the change.</span>
-              </h2>
-
-              <p>
-                Find opportunities to volunteer, meet your community and make
-                something meaningful happen.
-              </p>
-            </div>
-
-            <Link href="/events" className="text-link">
-              View all events
-              <ArrowUpRight size={17} />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="overflow-hidden rounded-2xl border border-gray-100 bg-white"
-                >
-                  <div className="h-56 animate-pulse bg-gray-200" />
-
-                  <div className="space-y-4 p-6">
-                    <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                    <div className="h-6 w-3/4 animate-pulse rounded bg-gray-200" />
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="events-empty">
-              <h3>We could not load the events.</h3>
-              <p>{error}</p>
-            </div>
-          ) : events.length === 0 ? (
-            <div className="events-empty">
-              <div className="events-empty-icon">
-                <CalendarDays size={29} />
               </div>
 
-              <h3>Your next good deed starts here.</h3>
+              <h3>{t(titleKey)}</h3>
+              <p>{t(descKey)}</p>
 
-              <p>
-                No upcoming events yet. Be the first to host one in your
-                neighbourhood.
-              </p>
-
-              <Link href="/create-event" className="primary-button">
-                Host an Event
-                <ArrowRight size={18} />
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {events.map((event, index) => (
-                <motion.article
-                  key={event._id}
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: index * 0.08 }}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-[#17301d] shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div className="relative h-56 overflow-hidden bg-[#e8eddf]">
-                    {event.thumbnail ? (
-                      <div
-                        role="img"
-                        aria-label={event.title}
-                        className="h-full w-full bg-cover bg-center transition duration-700 group-hover:scale-110"
-                        style={{
-                          backgroundImage: `url("${event.thumbnail}")`,
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[#78945c]">
-                        <Sprout size={55} />
-                      </div>
-                    )}
-
-                    <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-[#315b47] shadow-sm">
-                      {event.eventType || "Community"}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="mb-4 flex items-center gap-2 text-xs font-medium text-[#78945c]">
-                      <CalendarDays size={15} />
-                      {formatDate(event.eventDate)}
-                    </div>
-
-                    <h3 className="line-clamp-2 min-h-[3.4rem] text-xl font-semibold leading-snug">
-                      {event.title}
-                    </h3>
-
-                    <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin size={16} className="shrink-0 text-[#78945c]" />
-                      <span className="line-clamp-1">{event.location}</span>
-                    </div>
-
-                    <Link
-                      href={`/events/${event._id}`}
-                      className="primary-button mt-6 w-full"
-                    >
-                      View Event
-                      <ArrowRight size={17} />
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          )}
+              <div className="process-bottom">
+                <span>{number} / 03</span>
+                <ArrowRight size={15} />
+              </div>
+            </motion.article>
+          ))}
         </div>
       </section>
 
+     
+
       {/* GALLERY */}
-      <section id="gallery" className="section gallery-section">
+      <section id="gallery" className="section">
         <div className="section-heading">
           <div>
             <span className="eyebrow">
-              <Heart size={15} />
-              PEOPLE. PURPOSE. PROGRESS.
+              <Leaf size={15} />
+              {t("g_eyebrow")}
             </span>
 
             <h2>
-              A better place
+              {t("g_h2_a")}
               <br />
-              <span>starts with us.</span>
+              <span>{t("g_h2_b")}</span>
             </h2>
           </div>
 
-          <span className="gallery-note">Small moments. Meaningful change.</span>
+          <span className="gallery-note">{t("g_note")}</span>
         </div>
 
         <div className="gallery-grid">
-          {gallery.map((item, index) => (
-            <motion.div
-              key={item.title}
+          {gallery.map(({ image, titleKey, catKey }) => (
+            <div
+              key={titleKey}
               className="gallery-card"
-              initial={{ opacity: 0, y: 35 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-              style={{ backgroundImage: `url(${item.image})` }}
+              style={{ backgroundImage: `url(${image})` }}
             >
               <div className="gallery-overlay">
-                <span>
-                  {item.category} / 0{index + 1}
-                </span>
-
-                <h3>{item.title}</h3>
+                <span>{t(catKey)}</span>
+                <h3>{t(titleKey)}</h3>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* CTA */}
       <section className="cta-section">
-        <div className="cta-decoration">
-          <Leaf size={100} />
-        </div>
+        <Sprout className="cta-decoration" size={260} />
 
-        <motion.div
-          className="cta-content"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        <div className="cta-content">
           <span className="eyebrow">
-            <Sprout size={15} />
-            YOUR NEIGHBOURHOOD IS WAITING
+            <Leaf size={15} />
+            {t("cta_eyebrow")}
           </span>
 
           <h2>
-            Don&apos;t just wish
+            {t("cta_h2_a")}
             <br />
-            for change. <span>Show up.</span>
+            {t("cta_h2_b")}
+            <br />
+            <span>{t("cta_h2_c")}</span>
           </h2>
 
-          <p>
-            Join people who are doing something good for their communities.
-            Start small, get involved and help grow a better Bangladesh.
-          </p>
+          <p>{t("cta_text")}</p>
 
           <div className="cta-buttons">
-            <Link href="/register" className="cta-light-button">
-              Join the Community
-              <ArrowRight size={18} />
+            <Link href="/signup" className="cta-light-button">
+              {t("join_community")}
+              <ArrowRight size={16} />
             </Link>
-
-            <Link href="/create-event" className="cta-outline-button">
-              Host an Event
-              <ArrowUpRight size={17} />
+            <Link href="/events" className="cta-outline-button">
+              {t("explore_all")}
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* NEWSLETTER */}
       <section id="contact" className="newsletter-section">
         <div className="newsletter-container">
           <div>
-            <span className="eyebrow">STAY IN THE LOOP</span>
+            <span className="eyebrow">
+              <Leaf size={15} />
+              {t("nl_eyebrow")}
+            </span>
 
             <h2>
-              Good things
+              {t("nl_h2_a")}
               <br />
-              <span>grow together.</span>
+              <span>{t("nl_h2_b")}</span>
             </h2>
 
-            <p>
-              Get community updates, upcoming volunteer opportunities and
-              stories of positive change delivered to your inbox.
-            </p>
+            <p>{t("nl_text")}</p>
           </div>
 
           <form className="newsletter-form" onSubmit={handleNewsletter}>
-            <label htmlFor="newsletter-email">Your email address</label>
+            <label htmlFor="newsletter-email">{t("nl_label")}</label>
 
             <div className="newsletter-input">
               <input
                 id="newsletter-email"
                 type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("nl_ph")}
               />
-
-              <button type="submit" aria-label="Subscribe">
-                <ArrowRight size={20} />
+              <button type="submit" aria-label={t("nl_sub")}>
+                <ArrowRight size={18} />
               </button>
             </div>
 
             <span>
-              <ShieldCheck size={15} />
-              No spam. Just good things happening.
+              <ShieldCheck size={14} />
+              {t("nl_note")}
             </span>
           </form>
         </div>
@@ -740,77 +440,57 @@ export default function Home() {
             <div className="footer-brand">
               <Link href="/" className="brand footer-logo">
                 <span className="brand-icon">
-                  <Leaf size={23} />
+                  <Leaf size={22} />
                 </span>
-
                 <span>
                   rooted<span className="brand-highlight">.</span>
                   <small>BD</small>
                 </span>
               </Link>
 
-              <p>
-                A community platform for people who want to make a difference
-                through small actions, shared ideas and meaningful connections.
-              </p>
+              <p>{t("ft_desc")}</p>
 
               <div className="footer-socials">
                 <a
                   href="https://x.com"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label="X"
                 >
                   <XIcon size={16} />
-                </a>
-
-                <a href="#contact" aria-label="Community">
-                  <Users size={18} />
-                </a>
-
-                <a href="#contact" aria-label="Email">
-                  <Heart size={18} />
                 </a>
               </div>
             </div>
 
             <div className="footer-column">
-              <h4>Explore</h4>
-
-              <Link href="/">Home</Link>
-              <Link href="/events">Upcoming Events</Link>
-              <Link href="/create-event">Create Event</Link>
-              <a href="#about">About Us</a>
+              <h4>{t("ft_explore")}</h4>
+              <Link href="/events">{t("view_all")}</Link>
+              <Link href="/create-event">{t("ft_create")}</Link>
+              <Link href="/signup">{t("ft_join")}</Link>
             </div>
 
             <div className="footer-column">
-              <h4>Community</h4>
-
-              <Link href="/register">Join Community</Link>
-              <Link href="/login">Sign In</Link>
-              <Link href="/manage-events">Manage Events</Link>
-              <Link href="/joined-events">Joined Events</Link>
+              <h4>{t("ft_community")}</h4>
+              <Link href="/login">{t("ft_signin")}</Link>
+              <Link href="/my-events">{t("ft_manage")}</Link>
+              <Link href="/joined-events">{t("ft_joined")}</Link>
             </div>
 
             <div className="footer-column">
-              <h4>Our Causes</h4>
-
-              <a href="#categories">Tree Plantation</a>
-              <a href="#categories">River Cleanup</a>
-              <a href="#categories">Education</a>
-              <a href="#categories">Community Support</a>
+              <h4>{t("ft_causes")}</h4>
+              <Link href="/events">{t("cat_tree")}</Link>
+              <Link href="/events">{t("ft_river")}</Link>
+              <Link href="/events">{t("ft_edu")}</Link>
             </div>
           </div>
 
           <div className="footer-bottom">
             <p>
-              © {currentYear} Rooted BD. Growing together for a
-              better Bangladesh.
+              © {currentYear} {t("ft_copy")}
             </p>
-
             <div>
-              <span>Made with purpose</span>
-              <Leaf size={16} />
+              <Heart size={14} />
+              <span>{t("ft_made")}</span>
             </div>
           </div>
         </div>

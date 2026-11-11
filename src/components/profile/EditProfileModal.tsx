@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,8 +12,9 @@ import {
   Phone,
   Heart,
   ChevronDown,
-  Check,
 } from "lucide-react";
+
+import { useLang } from "@/components/LanguageProvider";
 
 import type {
   UserProfile,
@@ -76,6 +78,44 @@ const INTEREST_CATEGORIES = [
   },
 ];
 
+// Interest translations
+const INTEREST_TRANSLATIONS: Record<string, string> = {
+  "Environment & Nature": "পরিবেশ ও প্রকৃতি",
+  "Tree Plantation": "বৃক্ষরোপণ",
+  "Climate Action": "জলবায়ু পরিবর্তন মোকাবিলা",
+  "Wildlife Protection": "বন্যপ্রাণী সংরক্ষণ",
+  "Clean Environment": "পরিচ্ছন্ন পরিবেশ",
+
+  "Education & Knowledge": "শিক্ষা ও জ্ঞান",
+  "Child Education": "শিশু শিক্ষা",
+  "Free Teaching": "বিনামূল্যে শিক্ষা প্রদান",
+  "Digital Literacy": "ডিজিটাল সাক্ষরতা",
+  "Youth Development": "যুব উন্নয়ন",
+
+  "Health & Wellbeing": "স্বাস্থ্য ও সুস্থতা",
+  "Blood Donation": "রক্তদান",
+  "Mental Health Awareness": "মানসিক স্বাস্থ্য সচেতনতা",
+  "Health Awareness": "স্বাস্থ্য সচেতনতা",
+  "Community Healthcare": "কমিউনিটি স্বাস্থ্যসেবা",
+
+  "Community & Humanity": "সমাজ ও মানবতা",
+  Volunteering: "স্বেচ্ছাসেবামূলক কাজ",
+  "Food Distribution": "খাদ্য বিতরণ",
+  "Helping the Poor": "দরিদ্র মানুষের সহায়তা",
+  "Disaster Relief": "দুর্যোগে সহায়তা",
+
+  "Social Equality": "সামাজিক সমতা",
+  "Women Empowerment": "নারীর ক্ষমতায়ন",
+  "Child Protection": "শিশু সুরক্ষা",
+  "Disability Inclusion": "প্রতিবন্ধী ব্যক্তিদের অন্তর্ভুক্তি",
+  "Human Rights": "মানবাধিকার",
+
+  "Animal Welfare": "প্রাণী কল্যাণ",
+  "Animal Rescue": "প্রাণী উদ্ধার",
+  "Animal Care": "প্রাণীর যত্ন",
+  "Stray Animal Welfare": "পথপ্রাণীর কল্যাণ",
+};
+
 interface EditProfileModalProps {
   user: UserProfile;
   isOpen: boolean;
@@ -91,15 +131,151 @@ export default function EditProfileModal({
   onSave,
   isSaving = false,
 }: EditProfileModalProps) {
+  const { lang } = useLang();
+
+  const isBangla = lang === "bn";
+
+  // Modal translations
+  const translations = {
+    title: isBangla ? "প্রোফাইল সম্পাদনা" : "Edit Profile",
+    subtitle: isBangla
+      ? "আপনার ব্যক্তিগত তথ্য আপডেট করুন"
+      : "Update your personal information",
+
+    personalInfo: isBangla
+      ? "ব্যক্তিগত তথ্য"
+      : "Personal Information",
+
+    fullName: isBangla ? "পুরো নাম" : "Full Name",
+    fullNamePlaceholder: isBangla
+      ? "আপনার পুরো নাম লিখুন"
+      : "Enter your full name",
+
+    dateOfBirth: isBangla
+      ? "জন্ম তারিখ"
+      : "Date of Birth",
+
+    dateError: (year: number) =>
+      isBangla
+        ? `জন্ম তারিখ অবশ্যই ${year} সালের আগে হতে হবে।`
+        : `Date of Birth must be before ${year}.`,
+
+    currentYearRestriction: isBangla
+      ? "বর্তমান বছরের তারিখ গ্রহণযোগ্য নয়।"
+      : "Current year dates are not allowed.",
+
+    gender: isBangla ? "লিঙ্গ" : "Gender",
+    selectGender: isBangla ? "লিঙ্গ নির্বাচন করুন" : "Select gender",
+    male: isBangla ? "পুরুষ" : "Male",
+    female: isBangla ? "নারী" : "Female",
+    other: isBangla ? "অন্যান্য" : "Other",
+    preferNotToSay: isBangla
+      ? "জানাতে অনিচ্ছুক"
+      : "Prefer not to say",
+
+    aboutMe: isBangla ? "আমার সম্পর্কে" : "About Me",
+    bioPlaceholder: isBangla
+      ? "নিজের সম্পর্কে কিছু লিখুন..."
+      : "Write something about yourself...",
+
+    contactInfo: isBangla
+      ? "যোগাযোগের তথ্য"
+      : "Contact Information",
+
+    phoneNumber: isBangla
+      ? "ফোন নম্বর"
+      : "Phone Number",
+
+    phonePlaceholder: isBangla
+      ? "আপনার ফোন নম্বর লিখুন"
+      : "Enter your phone number",
+
+    phoneHint: isBangla
+      ? "শুধুমাত্র সংখ্যা (০-৯), সর্বোচ্চ ১১টি অঙ্ক।"
+      : "Only numbers (0-9), maximum 11 digits.",
+
+    locationInfo: isBangla
+      ? "ঠিকানার তথ্য"
+      : "Location Information",
+
+    division: isBangla ? "বিভাগ" : "Division",
+    divisionPlaceholder: isBangla
+      ? "বিভাগ লিখুন"
+      : "Enter division",
+
+    district: isBangla ? "জেলা" : "District",
+    districtPlaceholder: isBangla
+      ? "জেলা লিখুন"
+      : "Enter district",
+
+    upazila: isBangla ? "উপজেলা" : "Upazila",
+    upazilaPlaceholder: isBangla
+      ? "উপজেলা লিখুন"
+      : "Enter upazila",
+
+    postalCode: isBangla ? "পোস্টাল কোড" : "Postal Code",
+    postalCodePlaceholder: isBangla
+      ? "পোস্টাল কোড লিখুন"
+      : "Enter postal code",
+
+    interestsTitle: isBangla
+      ? "আগ্রহ ও সামাজিক উদ্যোগ"
+      : "Interests & Causes",
+
+    chooseInterests: isBangla
+      ? "আপনার আগ্রহের বিষয় নির্বাচন করুন"
+      : "Choose Your Interests",
+
+    selectInterests: isBangla
+      ? "আগ্রহের বিষয় নির্বাচন করুন"
+      : "Select your interests",
+
+    interestsSelected: (count: number) =>
+      isBangla
+        ? `${count}টি আগ্রহের বিষয় নির্বাচিত`
+        : `${count} interests selected`,
+
+    selectedInterests: isBangla
+      ? "নির্বাচিত আগ্রহের বিষয়"
+      : "Selected Interests",
+
+    noInterests: isBangla
+      ? "এখনো কোনো আগ্রহের বিষয় নির্বাচন করা হয়নি।"
+      : "No interests selected yet.",
+
+    interestLimit: isBangla
+      ? "আপনার আগ্রহের সঙ্গে মেলে এমন সর্বোচ্চ ১০টি বিষয় নির্বাচন করুন।"
+      : "Select up to 10 interests that match your passion.",
+
+    cancel: isBangla ? "বাতিল" : "Cancel",
+    saveChanges: isBangla
+      ? "পরিবর্তন সংরক্ষণ করুন"
+      : "Save Changes",
+
+    saving: isBangla ? "সংরক্ষণ হচ্ছে..." : "Saving...",
+
+    closeModal: isBangla
+      ? "প্রোফাইল সম্পাদনা বন্ধ করুন"
+      : "Close edit profile",
+
+    removeInterest: (interest: string) =>
+      isBangla
+        ? `${INTEREST_TRANSLATIONS[interest] || interest} সরিয়ে দিন`
+        : `Remove ${interest}`,
+  };
+
   // Current year is not allowed for Date of Birth
-  const maxDate = `${new Date().getFullYear() - 1}-12-31`;
+  const currentYear = new Date().getFullYear();
+  const maxDate = `${currentYear - 1}-12-31`;
 
   const [formData, setFormData] = useState<ProfileFormData>({
     name: user.name || "",
     dateOfBirth: user.dateOfBirth || "",
     gender: user.gender || "",
     bio: user.bio || "",
-    phone: (user.phone || "").replace(/[^0-9]/g, "").slice(0, 11),
+    phone: (user.phone || "")
+      .replace(/[^0-9]/g, "")
+      .slice(0, 11),
 
     location: {
       division: user.location?.division || "",
@@ -123,7 +299,9 @@ export default function EditProfileModal({
       dateOfBirth: user.dateOfBirth || "",
       gender: user.gender || "",
       bio: user.bio || "",
-      phone: (user.phone || "").replace(/[^0-9]/g, "").slice(0, 11),
+      phone: (user.phone || "")
+        .replace(/[^0-9]/g, "")
+        .slice(0, 11),
 
       location: {
         division: user.location?.division || "",
@@ -141,6 +319,13 @@ export default function EditProfileModal({
 
   if (!isOpen) return null;
 
+  // Translate interest labels without changing stored values
+  const getInterestLabel = (interest: string) => {
+    if (!isBangla) return interest;
+
+    return INTEREST_TRANSLATIONS[interest] || interest;
+  };
+
   // Handle General Input Changes
   const handleChange = (
     field: keyof ProfileFormData,
@@ -155,14 +340,11 @@ export default function EditProfileModal({
   // Handle Date of Birth Validation
   const handleDateChange = (value: string) => {
     if (value && value > maxDate) {
-      setDateError(
-        `Date of Birth must be before ${new Date().getFullYear()}.`
-      );
+      setDateError(translations.dateError(currentYear));
       return;
     }
 
     setDateError("");
-
     handleChange("dateOfBirth", value);
   };
 
@@ -197,7 +379,6 @@ export default function EditProfileModal({
 
       const isSelected = currentInterests.includes(interest);
 
-      // Remove selected interest
       if (isSelected) {
         return {
           ...prev,
@@ -212,7 +393,6 @@ export default function EditProfileModal({
         return prev;
       }
 
-      // Add new interest
       return {
         ...prev,
         interests: [...currentInterests, interest],
@@ -226,14 +406,11 @@ export default function EditProfileModal({
   ) => {
     e.preventDefault();
 
-    // Validate Date of Birth
     if (
       formData.dateOfBirth &&
       formData.dateOfBirth > maxDate
     ) {
-      setDateError(
-        `Date of Birth must be before ${new Date().getFullYear()}.`
-      );
+      setDateError(translations.dateError(currentYear));
       return;
     }
 
@@ -242,8 +419,9 @@ export default function EditProfileModal({
     await onSave({
       ...formData,
       name: formData.name.trim(),
-      // FIX 1: phone optional হওয়ায় fallback যোগ করা হয়েছে
-      phone: (formData.phone || "").replace(/[^0-9]/g, "").slice(0, 11),
+      phone: (formData.phone || "")
+        .replace(/[^0-9]/g, "")
+        .slice(0, 11),
       interests: formData.interests || [],
     });
   };
@@ -272,11 +450,11 @@ export default function EditProfileModal({
               id="edit-profile-title"
               className="text-xl font-bold text-[#18352b]"
             >
-              Edit Profile
+              {translations.title}
             </h2>
 
             <p className="mt-1 text-xs text-gray-500">
-              Update your personal information
+              {translations.subtitle}
             </p>
           </div>
 
@@ -284,7 +462,7 @@ export default function EditProfileModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            aria-label="Close edit profile"
+            aria-label={translations.closeModal}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 transition hover:bg-[#f4f8f5] hover:text-[#18352b] disabled:opacity-50"
           >
             <X size={20} />
@@ -304,7 +482,7 @@ export default function EditProfileModal({
                 />
 
                 <h3 className="font-bold text-[#18352b]">
-                  Personal Information
+                  {translations.personalInfo}
                 </h3>
               </div>
 
@@ -313,7 +491,7 @@ export default function EditProfileModal({
                 {/* Full Name */}
                 <div className="sm:col-span-2">
                   <label className={labelClass}>
-                    Full Name
+                    {translations.fullName}
                   </label>
 
                   <input
@@ -322,7 +500,7 @@ export default function EditProfileModal({
                     onChange={(e) =>
                       handleChange("name", e.target.value)
                     }
-                    placeholder="Enter your full name"
+                    placeholder={translations.fullNamePlaceholder}
                     required
                     maxLength={100}
                     className={inputClass}
@@ -332,7 +510,7 @@ export default function EditProfileModal({
                 {/* Date of Birth */}
                 <div>
                   <label className={labelClass}>
-                    Date of Birth
+                    {translations.dateOfBirth}
                   </label>
 
                   <div className="relative">
@@ -364,14 +542,14 @@ export default function EditProfileModal({
                   )}
 
                   <p className="mt-2 text-xs text-gray-400">
-                    Current year dates are not allowed.
+                    {translations.currentYearRestriction}
                   </p>
                 </div>
 
                 {/* Gender */}
                 <div>
                   <label className={labelClass}>
-                    Gender
+                    {translations.gender}
                   </label>
 
                   <select
@@ -381,12 +559,24 @@ export default function EditProfileModal({
                     }
                     className={inputClass}
                   >
-                    <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">
+                      {translations.selectGender}
+                    </option>
+
+                    <option value="Male">
+                      {translations.male}
+                    </option>
+
+                    <option value="Female">
+                      {translations.female}
+                    </option>
+
+                    <option value="Other">
+                      {translations.other}
+                    </option>
+
                     <option value="Prefer not to say">
-                      Prefer not to say
+                      {translations.preferNotToSay}
                     </option>
                   </select>
                 </div>
@@ -394,7 +584,7 @@ export default function EditProfileModal({
                 {/* About Me */}
                 <div className="sm:col-span-2">
                   <label className={labelClass}>
-                    About Me
+                    {translations.aboutMe}
                   </label>
 
                   <textarea
@@ -402,7 +592,7 @@ export default function EditProfileModal({
                     onChange={(e) =>
                       handleChange("bio", e.target.value)
                     }
-                    placeholder="Write something about yourself..."
+                    placeholder={translations.bioPlaceholder}
                     rows={4}
                     maxLength={500}
                     className={`${inputClass} resize-none`}
@@ -424,12 +614,12 @@ export default function EditProfileModal({
                 />
 
                 <h3 className="font-bold text-[#18352b]">
-                  Contact Information
+                  {translations.contactInfo}
                 </h3>
               </div>
 
               <label className={labelClass}>
-                Phone Number
+                {translations.phoneNumber}
               </label>
 
               <input
@@ -439,13 +629,13 @@ export default function EditProfileModal({
                 onChange={(e) =>
                   handlePhoneChange(e.target.value)
                 }
-                placeholder="Enter your phone number"
+                placeholder={translations.phonePlaceholder}
                 maxLength={11}
                 className={inputClass}
               />
 
               <p className="mt-2 text-xs text-gray-400">
-                Only numbers (0-9), maximum 11 digits.
+                {translations.phoneHint}
               </p>
             </section>
 
@@ -458,7 +648,7 @@ export default function EditProfileModal({
                 />
 
                 <h3 className="font-bold text-[#18352b]">
-                  Location Information
+                  {translations.locationInfo}
                 </h3>
               </div>
 
@@ -467,7 +657,7 @@ export default function EditProfileModal({
                 {/* Division */}
                 <div>
                   <label className={labelClass}>
-                    Division
+                    {translations.division}
                   </label>
 
                   <input
@@ -479,7 +669,7 @@ export default function EditProfileModal({
                         e.target.value
                       )
                     }
-                    placeholder="Enter division"
+                    placeholder={translations.divisionPlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -487,7 +677,7 @@ export default function EditProfileModal({
                 {/* District */}
                 <div>
                   <label className={labelClass}>
-                    District
+                    {translations.district}
                   </label>
 
                   <input
@@ -499,7 +689,7 @@ export default function EditProfileModal({
                         e.target.value
                       )
                     }
-                    placeholder="Enter district"
+                    placeholder={translations.districtPlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -507,7 +697,7 @@ export default function EditProfileModal({
                 {/* Upazila */}
                 <div>
                   <label className={labelClass}>
-                    Upazila
+                    {translations.upazila}
                   </label>
 
                   <input
@@ -519,7 +709,7 @@ export default function EditProfileModal({
                         e.target.value
                       )
                     }
-                    placeholder="Enter upazila"
+                    placeholder={translations.upazilaPlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -527,7 +717,7 @@ export default function EditProfileModal({
                 {/* Postal Code */}
                 <div>
                   <label className={labelClass}>
-                    Postal Code
+                    {translations.postalCode}
                   </label>
 
                   <input
@@ -539,7 +729,7 @@ export default function EditProfileModal({
                         e.target.value
                       )
                     }
-                    placeholder="Enter postal code"
+                    placeholder={translations.postalCodePlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -555,12 +745,12 @@ export default function EditProfileModal({
                 />
 
                 <h3 className="font-bold text-[#18352b]">
-                  Interests & Causes
+                  {translations.interestsTitle}
                 </h3>
               </div>
 
               <label className={labelClass}>
-                Choose Your Interests
+                {translations.chooseInterests}
               </label>
 
               {/* Dropdown Button */}
@@ -574,8 +764,10 @@ export default function EditProfileModal({
               >
                 <span>
                   {(formData.interests || []).length > 0
-                    ? /* FIX 2 */ `${(formData.interests || []).length} interests selected`
-                    : "Select your interests"}
+                    ? translations.interestsSelected(
+                        (formData.interests || []).length
+                      )
+                    : translations.selectInterests}
                 </span>
 
                 <ChevronDown
@@ -596,7 +788,7 @@ export default function EditProfileModal({
                       className="mb-5 last:mb-0"
                     >
                       <h4 className="mb-3 text-sm font-bold text-[#267a44]">
-                        {category.title}
+                        {getInterestLabel(category.title)}
                       </h4>
 
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -633,7 +825,9 @@ export default function EditProfileModal({
                                 className="checkbox checkbox-sm checkbox-success"
                               />
 
-                              <span>{option}</span>
+                              <span>
+                                {getInterestLabel(option)}
+                              </span>
                             </label>
                           );
                         })}
@@ -647,7 +841,7 @@ export default function EditProfileModal({
               <div className="mt-4">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs font-semibold text-gray-500">
-                    Selected Interests
+                    {translations.selectedInterests}
                   </p>
 
                   <p className="text-xs font-medium text-[#267a44]">
@@ -657,20 +851,21 @@ export default function EditProfileModal({
 
                 {(formData.interests || []).length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {/* FIX 3 */}
                     {(formData.interests || []).map((interest) => (
                       <span
                         key={interest}
                         className="inline-flex items-center gap-2 rounded-full border border-[#cfe3d3] bg-[#edf5ee] px-3 py-2 text-xs font-medium text-[#164223]"
                       >
-                        {interest}
+                        {getInterestLabel(interest)}
 
                         <button
                           type="button"
                           onClick={() =>
                             handleInterestToggle(interest)
                           }
-                          aria-label={`Remove ${interest}`}
+                          aria-label={translations.removeInterest(
+                            interest
+                          )}
                           className="text-[#267a44] transition hover:text-red-600"
                         >
                           <X size={14} />
@@ -680,13 +875,13 @@ export default function EditProfileModal({
                   </div>
                 ) : (
                   <p className="text-xs text-gray-400">
-                    No interests selected yet.
+                    {translations.noInterests}
                   </p>
                 )}
               </div>
 
               <p className="mt-3 text-xs text-gray-400">
-                Select up to 10 interests that match your passion.
+                {translations.interestLimit}
               </p>
             </section>
           </div>
@@ -699,7 +894,7 @@ export default function EditProfileModal({
               disabled={isSaving}
               className="rounded-xl border border-[#e1ece5] px-5 py-3 text-sm font-semibold text-gray-600 transition hover:bg-white disabled:opacity-50"
             >
-              Cancel
+              {translations.cancel}
             </button>
 
             <button
@@ -709,7 +904,9 @@ export default function EditProfileModal({
             >
               <Save size={17} />
 
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving
+                ? translations.saving
+                : translations.saveChanges}
             </button>
           </div>
         </form>

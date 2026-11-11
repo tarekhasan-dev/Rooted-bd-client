@@ -32,7 +32,7 @@
   --rbd-pad: 24px;
   --rbd-gap: 20px;
   --rbd-brand-w: 190px;
-  --rbd-login-w: 92px;
+  --rbd-login-w: 205px;
   --rbd-r: 36px;
 
   --rbd-tabs-w: calc(
@@ -223,14 +223,13 @@
   transition: color 400ms ease;
 }
 
-.rbd-tab:focus-visible {
-  outline: 2px solid var(--rbd-hl);
-  outline-offset: -3px;
+.rbd-tab:focus {
+  outline: none;
 }
 
-.rbd-tab[aria-current="page"]:focus,
-.rbd-tab[aria-current="page"]:focus-visible {
-  outline: none;
+.rbd-tab:focus-visible:not([aria-current="page"]) {
+  outline: 2px solid var(--rbd-hl);
+  outline-offset: -3px;
 }
 
 .rbd-tab-icon {
@@ -341,6 +340,7 @@
   flex: 0 0 var(--rbd-login-w);
 
   display: flex;
+  flex-wrap: nowrap;
   justify-content: flex-end;
 }
 
@@ -385,7 +385,7 @@
     --rbd-pad: 16px;
     --rbd-gap: 12px;
     --rbd-brand-w: 160px;
-    --rbd-login-w: 88px;
+    --rbd-login-w: 180px;
     --rbd-r: 34px;
 
     width: 850px;
@@ -419,7 +419,7 @@
     --rbd-pad: 8px;
     --rbd-gap: 4px;
     --rbd-brand-w: 30px;
-    --rbd-login-w: 60px;
+    --rbd-login-w: 112px;
     --rbd-r: 22px;
 
     width: 100%;
@@ -522,7 +522,7 @@
   .rbd-nav[data-scrolled="true"] {
     --rbd-pad: 6px;
     --rbd-gap: 4px;
-    --rbd-login-w: 56px;
+    --rbd-login-w: 106px;
 
     height: 48px;
   }
@@ -539,15 +539,217 @@
     transition: none !important;
     animation: none !important;
   }
-} 
+}
 
 @keyframes rbd-float {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%      { transform: translateY(-3px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(2deg);
+  }
 }
+
 .rbd-brand-icon {
   animation: rbd-float 3.2s ease-in-out infinite;
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .rbd-brand-icon { animation: none; }
+  .rbd-brand-icon {
+    animation: none;
+  }
+}
+
+/* ---------- Language toggle in navbar ---------- */
+.rbd-login-wrap {
+  align-items: center;
+  gap: 8px;
+}
+
+.rbd-login-wrap .lang-toggle {
+  position: static;
+  top: auto;
+  right: auto;
+  flex: none;
+
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+
+  margin: 0;
+  padding: 3px;
+
+  background: transparent;
+  backdrop-filter: none;
+  border: 1.5px solid color-mix(in srgb, var(--rbd-ink) 22%, transparent);
+  border-radius: 999px;
+}
+
+.rbd-login-wrap .lang-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 28px;
+  min-width: 36px;
+  margin: 0;
+  padding: 0 9px;
+
+  color: var(--rbd-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+.rbd-login-wrap .lang-toggle button:hover {
+  background: color-mix(in srgb, var(--rbd-ink) 10%, transparent);
+}
+
+.rbd-login-wrap .lang-toggle button.active {
+  color: #ffffff;
+  background: var(--rbd-bubble);
+}
+
+@media (max-width: 1000px) {
+  .rbd-login-wrap {
+    gap: 6px;
+  }
+
+  .rbd-login-wrap .lang-toggle button {
+    min-width: 32px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rbd-login-wrap {
+    gap: 4px;
+  }
+
+  .rbd-login-wrap .lang-toggle {
+    padding: 0;
+    gap: 0;
+    border: 0;
+  }
+
+  .rbd-login-wrap .lang-toggle button {
+    height: 28px;
+    min-width: 0;
+    padding: 0 9px;
+    font-size: 10px;
+    border: 1.5px solid color-mix(in srgb, var(--rbd-ink) 25%, transparent);
+  }
+
+  .rbd-login-wrap .lang-toggle button.active {
+    display: none;
+  }
+}
+
+/* ---------- Bangla tab labels ---------- */
+html[lang="bn"] .rbd-tab-label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1000px) {
+  html[lang="bn"] .rbd-tab-label {
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 760px) {
+  html[lang="bn"] .rbd-tab-label {
+    font-size: 9px;
+  }
+}
+
+
+.rbd-login {
+  height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  color: #ffffff;
+  background: var(--rbd-bubble);
+  border: none;
+  border-radius: 30px;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.rbd-login:hover {
+  background: var(--rbd-hl);
+  transform: translateY(-2px);
+}
+
+.rbd-login {
+  height: 32px;
+  min-width: 64px;
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  color: #ffffff;
+  background: var(--rbd-bubble);
+  border: none;
+  border-radius: 30px;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.rbd-login:hover {
+  background: var(--rbd-hl);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 760px) {
+  .rbd-login {
+    height: 28px;
+    min-width: 52px;
+    padding: 0 8px;
+    font-size: 9px;
+  }
+}
+
+/* ---------- Dark mode: navbar আলাদা করে দেখানো ---------- */
+[data-theme="dark"] .rbd-nav {
+  --rbd-surface: #15261d;
+}
+
+[data-theme="dark"] .rbd-bg {
+  filter: drop-shadow(0 0 0.5px rgba(165, 230, 189, 0.55))
+    drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
 }

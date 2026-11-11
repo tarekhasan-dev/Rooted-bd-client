@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,6 +9,8 @@ import {
   Info,
   X,
 } from "lucide-react";
+
+import { useLang } from "@/components/LanguageProvider";
 
 import {
   getMyProfile,
@@ -45,35 +46,33 @@ const TOAST_EXIT_DURATION = 400;
 const toastStyles = {
   success: {
     icon: CheckCircle2,
-    iconColor: "text-green-600",
-    iconBg: "bg-green-50",
-    border: "border-green-100",
-    title: "Success",
+    iconColor: "text-green-600 dark:text-green-400",
+    iconBg: "bg-green-50 dark:bg-green-900/30",
+    border: "border-green-100 dark:border-green-800",
   },
   error: {
     icon: XCircle,
-    iconColor: "text-red-600",
-    iconBg: "bg-red-50",
-    border: "border-red-100",
-    title: "Error",
+    iconColor: "text-red-600 dark:text-red-400",
+    iconBg: "bg-red-50 dark:bg-red-900/30",
+    border: "border-red-100 dark:border-red-800",
   },
   warning: {
     icon: AlertTriangle,
-    iconColor: "text-amber-600",
-    iconBg: "bg-amber-50",
-    border: "border-amber-100",
-    title: "Warning",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-50 dark:bg-amber-900/30",
+    border: "border-amber-100 dark:border-amber-800",
   },
   info: {
     icon: Info,
-    iconColor: "text-blue-600",
-    iconBg: "bg-blue-50",
-    border: "border-blue-100",
-    title: "Information",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-50 dark:bg-blue-900/30",
+    border: "border-blue-100 dark:border-blue-800",
   },
 };
 
 export default function MyProfilePage() {
+  const { t } = useLang();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -113,8 +112,18 @@ export default function MyProfilePage() {
     type: ToastType,
     title?: string
   ) => {
+    const translatedTitle =
+      title ||
+      (type === "success"
+        ? t("mp_toast_success")
+        : type === "error"
+          ? t("mp_toast_error")
+          : type === "warning"
+            ? t("mp_toast_warning")
+            : t("mp_toast_info"));
+
     setToast({
-      title: title || toastStyles[type].title,
+      title: translatedTitle,
       message,
       type,
     });
@@ -136,7 +145,7 @@ export default function MyProfilePage() {
       setError(
         error instanceof Error
           ? error.message
-          : "Failed to load profile!"
+          : ""
       );
     } finally {
       if (showLoading) {
@@ -163,17 +172,15 @@ export default function MyProfilePage() {
       setIsEditModalOpen(false);
 
       showToast(
-        "Your profile has been updated successfully!",
-        "success",
-        "Success"
+        t("mp_profile_updated"),
+        "success"
       );
     } catch (error) {
       showToast(
         error instanceof Error
           ? error.message
-          : "Failed to update profile!",
-        "error",
-        "Error"
+          : t("mp_profile_update_failed"),
+        "error"
       );
     } finally {
       setIsSaving(false);
@@ -189,24 +196,25 @@ export default function MyProfilePage() {
 
       if (!result.success) {
         throw new Error(
-          result.message || "Image upload failed!"
+          result.message || t("mp_image_upload_failed")
         );
       }
 
       await fetchProfile(false);
 
+      // Notify navbar that profile image has changed
+      window.dispatchEvent(new Event("profile-updated"));
+
       showToast(
-        "Your profile picture has been updated successfully!",
-        "success",
-        "Success"
+        t("mp_profile_image_updated"),
+        "success"
       );
     } catch (error) {
       showToast(
         error instanceof Error
           ? error.message
-          : "Failed to upload profile picture!",
-        "error",
-        "Error"
+          : t("mp_profile_image_failed"),
+        "error"
       );
     } finally {
       setIsUploadingImage(false);
@@ -216,13 +224,13 @@ export default function MyProfilePage() {
   // Loading State
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#fafcfb] px-4 py-20">
-        <div className="mx-auto max-w-6xl">
+      <main className="min-h-screen bg-[#fafcfb] px-4 py-20 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100">
+        <div className="mx-auto max-w-5xl">
           <div className="flex min-h-[400px] flex-col items-center justify-center">
             <span className="loading loading-spinner loading-lg text-[#267A44]" />
 
-            <p className="mt-4 text-sm font-medium text-gray-500">
-              Loading your profile...
+            <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+              {t("mp_loading")}
             </p>
           </div>
         </div>
@@ -233,15 +241,15 @@ export default function MyProfilePage() {
   // Error State
   if (error || !profile) {
     return (
-      <main className="min-h-screen bg-[#fafcfb] px-4 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800">
-              Unable to Load Profile
+      <main className="min-h-screen bg-[#fafcfb] px-4 py-20 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm dark:border-red-900/50 dark:bg-gray-900">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+              {t("mp_load_error_title")}
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
-              {error || "Profile information is unavailable."}
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {error || t("mp_load_error_description")}
             </p>
 
             <button
@@ -249,7 +257,7 @@ export default function MyProfilePage() {
               onClick={() => fetchProfile()}
               className="mt-6 rounded-lg bg-[#267A44] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#164223]"
             >
-              Try Again
+              {t("mp_try_again")}
             </button>
           </div>
         </div>
@@ -264,7 +272,7 @@ export default function MyProfilePage() {
   const ToastIcon = activeToastStyle?.icon;
 
   return (
-    <main className="min-h-screen bg-[#fafcfb] px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#fafcfb] px-4 pt-20 pb-8 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100 sm:px-6 sm:pt-24 lg:px-8 lg:pt-24">
 
       {/* Toast Exit Animation */}
       <style jsx global>{`
@@ -298,7 +306,7 @@ export default function MyProfilePage() {
           <div
             role={toast.type === "error" ? "alert" : "status"}
             aria-live={toast.type === "error" ? "assertive" : "polite"}
-            className={`pointer-events-auto relative flex w-full max-w-sm items-center gap-3 overflow-hidden rounded-full border ${activeToastStyle.border} bg-white px-5 py-4 shadow-xl shadow-gray-900/10 ${
+            className={`pointer-events-auto relative flex w-full max-w-sm items-center gap-3 overflow-hidden rounded-full border ${activeToastStyle.border} bg-white px-5 py-4 shadow-xl shadow-gray-900/10 transition-colors duration-300 dark:bg-gray-900 dark:shadow-black/30 ${
               isToastExiting ? "toast-exit" : ""
             }`}
           >
@@ -314,11 +322,11 @@ export default function MyProfilePage() {
 
             {/* Toast Content */}
             <div className="min-w-0 flex-1 py-1">
-              <h3 className="text-sm font-bold text-gray-900">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
                 {toast.title}
               </h3>
 
-              <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              <p className="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                 {toast.message}
               </p>
             </div>
@@ -327,8 +335,8 @@ export default function MyProfilePage() {
             <button
               type="button"
               onClick={() => setToast(null)}
-              aria-label="Close notification"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              aria-label={t("mp_close_notification")}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
             >
               <X size={17} />
             </button>
@@ -337,22 +345,7 @@ export default function MyProfilePage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-6xl space-y-8">
-
-        {/* Page Heading */}
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#267A44]">
-            rooted.BD
-          </p>
-
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#164223] sm:text-4xl">
-            My Profile
-          </h1>
-
-          <p className="mt-2 text-sm text-gray-500 sm:text-base">
-            Manage your personal information and account details.
-          </p>
-        </div>
+      <div className="mx-auto max-w-5xl space-y-4">
 
         {/* Profile Header */}
         <ProfileHeader
@@ -361,13 +354,12 @@ export default function MyProfilePage() {
           onImageUpload={handleImageUpload}
           isUploadingImage={isUploadingImage}
           onValidationError={(message) =>
-            showToast(message, "error", "Invalid File")
+            showToast(message, "error", t("mp_invalid_file"))
           }
         />
 
-        {/* Profile Information */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
+        {/* Profile Information: single grid, equal-height rows */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <PersonalInfoCard
             user={profile}
             onEdit={() => setIsEditModalOpen(true)}
@@ -383,15 +375,16 @@ export default function MyProfilePage() {
             onEdit={() => setIsEditModalOpen(true)}
           />
 
-          <InterestsCard
-            user={profile}
-            onEdit={() => setIsEditModalOpen(true)}
-          />
+          <div className="h-full [&>section]:h-full">
+            <InterestsCard
+              user={profile}
+              onEdit={() => setIsEditModalOpen(true)}
+            />
+          </div>
 
           <div className="lg:col-span-2">
             <SecurityCard user={profile} />
           </div>
-
         </div>
 
         {/* Edit Profile Modal */}
