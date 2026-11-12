@@ -1,260 +1,579 @@
-/* Event detail page. Reuses the ev-* classes from events.css,
-   and only adds what the detail page needs (evd-*). */
 
-.evd {
+/* Event detail page (/events/[id]).
+   Works on top of events.css.
+   Dark mode follows html[data-theme="dark"].
+*/
+
+.ev-page.evd {
+  --evd-nav: 96px;
+  --evd-card: #ffffff;
   --evd-ink: #12382e;
   --evd-muted: #5f7a70;
-  --evd-card: #ffffff;
   --evd-soft: #eef5e6;
-  --evd-line: #c9dcc0;
+  --evd-line: #cddfc3;
+  --evd-accent: #0d6b5c;
   --evd-teal: #0d6b5c;
-  --evd-gold-soft: #fdf0cf;
-  --evd-gold-ink: #7a5600;
+  --evd-gold: #f3b32a;
+  --evd-shadow: 0 8px 30px rgba(13, 60, 45, 0.1);
+
+  padding-top: calc(var(--evd-nav) + 32px);
+  padding-bottom: 64px;
 }
 
-/* Change these selectors if your ThemeSwitcher uses a different dark marker */
-.dark .evd,
-[data-theme="dark"] .evd {
-  --evd-ink: #e6f2e3;
-  --evd-muted: #9bb8aa;
-  --evd-card: #1a3329;
-  --evd-soft: #142a21;
-  --evd-line: #2c4a3d;
-  --evd-teal: #2fa58f;
-  --evd-gold-soft: #3a2f10;
-  --evd-gold-ink: #f3d98a;
+[data-theme="dark"] .ev-page.evd {
+  --evd-card: #17291c;
+  --evd-ink: #e3f4e5;
+  --evd-muted: #a1b5a4;
+  --evd-soft: #132519;
+  --evd-line: #29422e;
+  --evd-accent: #6fd6bf;
+  --evd-teal: #1f8f7a;
+  --evd-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
+
+.evd :focus-visible {
+  outline: 3px solid var(--evd-gold);
+  outline-offset: 2px;
+}
+
+/* Back link */
 
 .evd-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 6px 12px;
+  gap: 8px;
+  margin: 0 6px 16px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--evd-muted);
-  transition: color 0.2s;
+  color: var(--evd-accent);
+  text-decoration: none;
+  transition: gap 0.2s;
 }
+
 .evd-back:hover {
-  color: var(--evd-teal);
+  gap: 12px;
+}
+
+/* Hero spacing */
+
+.evd .ev-title {
+  margin: 0 0 20px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .evd-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-bottom: 14px;
 }
+
 .evd-ended {
-  display: inline-flex;
-  align-items: center;
-  background: var(--evd-gold-soft);
-  color: var(--evd-gold-ink);
-  font-size: 12px;
-  font-weight: 600;
   padding: 3px 12px;
   border-radius: 999px;
+  background: var(--evd-soft);
+  border: 1px solid var(--evd-line);
+  color: var(--evd-muted);
+  font-size: 12px;
+  font-weight: 600;
 }
+
+/* Event metadata */
 
 .evd-meta {
   list-style: none;
-  margin: 18px 0 16px;
+  margin: 0 0 20px;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 14px 18px;
 }
+
 .evd-meta li {
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  min-width: 0;
   font-size: 14px;
-  color: var(--evd-ink);
 }
-.evd-meta .evd-ic {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--evd-soft);
-  color: var(--evd-teal);
-  display: grid;
-  place-items: center;
-}
+
 .evd-meta small {
   display: block;
   font-size: 11px;
   color: var(--evd-muted);
 }
+
 .evd-meta b {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
+.evd-ic {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--evd-soft);
+  color: var(--evd-accent);
+  transition: transform 0.25s, background 0.25s;
+}
+
+.evd-meta li:hover .evd-ic {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+/* Participant count */
+
 .evd-count {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
   font-size: 14px;
   color: var(--evd-muted);
 }
+
 .evd-count strong {
   display: inline-block;
   color: var(--evd-ink);
   font-size: 17px;
 }
 
-/* Right-side art panel: event photo instead of the illustration */
+/* Photo / illustration */
+
 .evd-art {
   position: relative;
-  min-height: 480px;
+  min-height: 360px;
+  border-radius: 22px;
+  border-bottom: 8px solid #7a4a26;
   overflow: hidden;
+  background: #cfe6a6;
 }
-.evd-photo {
+
+.evd-photo,
+.evd-svg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.evd-photo {
   background-size: cover;
   background-position: center;
-  background-color: #cfe6a6;
-}
-.evd-photo--empty {
-  display: grid;
-  place-items: center;
-  color: #3f9a58;
-  background: linear-gradient(180deg, #e9f4c8, #a8d492);
+  transition: transform 6s ease-out;
 }
 
-.evd-join {
-  width: 100%;
-  justify-content: center;
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  transition: transform 0.15s, background 0.25s, color 0.25s;
+.evd-art:hover .evd-photo {
+  transform: scale(1.04);
 }
-.evd-join:active:not(:disabled) {
-  transform: scale(0.97);
+
+.evd-photo--empty {
+  display: block;
 }
-.evd-join[data-joined="true"] {
+
+.evd .ev-inset {
+  z-index: 2;
+}
+
+/* Landscape animations */
+
+.evd-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: evd-sway 5s ease-in-out infinite;
+}
+
+.evd-sun-glow {
+  animation: evd-glow 6s ease-in-out infinite;
+}
+
+.evd-cloud {
+  animation: evd-drift 28s linear infinite;
+}
+
+@keyframes evd-sway {
+  0%,
+  100% {
+    transform: rotate(-1.6deg);
+  }
+
+  50% {
+    transform: rotate(1.6deg);
+  }
+}
+
+@keyframes evd-glow {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@keyframes evd-drift {
+  from {
+    transform: translateX(-40px);
+  }
+
+  to {
+    transform: translateX(520px);
+  }
+}
+
+/* Floating leaves */
+
+.evd-leaves {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.evd-leaves span {
+  position: absolute;
+  top: -30px;
+  width: 14px;
+  height: 14px;
+  border-radius: 0 100% 0 100%;
+  background: #59ae6a;
+  opacity: 0.75;
+  animation: evd-fall 11s linear infinite;
+}
+
+.evd-leaves span:nth-child(1) {
+  left: 12%;
+  animation-delay: 0s;
+}
+
+.evd-leaves span:nth-child(2) {
+  left: 38%;
+  animation-delay: -4s;
+  background: #7fb25a;
+  width: 11px;
+  height: 11px;
+}
+
+.evd-leaves span:nth-child(3) {
+  left: 64%;
+  animation-delay: -7s;
+  background: #f3b32a;
+}
+
+.evd-leaves span:nth-child(4) {
+  left: 86%;
+  animation-delay: -2s;
+  width: 10px;
+  height: 10px;
+}
+
+@keyframes evd-fall {
+  0% {
+    transform: translateY(0) rotate(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.75;
+  }
+
+  50% {
+    transform: translateY(190px) rotate(180deg) translateX(18px);
+  }
+
+  100% {
+    transform: translateY(400px) rotate(360deg) translateX(-12px);
+    opacity: 0;
+  }
+}
+
+/* Join event button */
+
+.evd .evd-join {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+  transform: translateY(0);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+/* Animated expanding ring */
+
+.evd .evd-join[data-joined="false"]:not(:disabled)::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border: 2px solid rgba(243, 179, 42, 0.75);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  animation: evd-join-ring 2s ease-out infinite;
+}
+
+@keyframes evd-join-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+/* Hover */
+
+.evd .evd-join:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(243, 179, 42, 0.3);
+}
+
+/* Click */
+
+.evd .evd-join:not(:disabled):active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 2px 8px rgba(243, 179, 42, 0.2);
+}
+
+/* Joined state */
+
+.evd .evd-join[data-joined="true"] {
   background: var(--evd-teal);
   color: #fff;
-  box-shadow: none;
-}
-.evd-join:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.evd-leave {
-  display: block;
-  margin: 8px auto 0;
-  background: none;
-  border: 0;
-  font: inherit;
-  font-size: 13px;
-  color: var(--evd-muted);
-  text-decoration: underline;
-  cursor: pointer;
-}
-.evd-notice {
-  margin: 8px 0 0;
-  font-size: 13px;
-  text-align: center;
-  color: var(--evd-teal);
-  min-height: 1.2em;
+  box-shadow: 0 4px 14px rgba(13, 107, 92, 0.2);
 }
 
-/* Body */
+.evd .evd-join[data-joined="true"]::after {
+  display: none;
+}
+
+/* Disabled state */
+
+.evd .evd-join:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  animation: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.evd .evd-join:disabled::after {
+  display: none;
+}
+
+/* Leave button */
+
+.evd-leave {
+  display: block;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--evd-muted);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.evd-leave:hover {
+  color: var(--evd-ink);
+}
+
+.evd-leave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Join notice */
+
+.evd-notice {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--evd-accent);
+}
+
+/* About + Organizer panels */
+
 .evd-cols {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.4fr 1fr;
   gap: 22px;
-  margin-bottom: 22px;
+  margin: 28px 0 8px;
   align-items: start;
 }
+
 .evd-panel {
   background: var(--evd-card);
-  color: var(--evd-ink);
-  border-radius: 24px;
-  padding: 22px;
-  box-shadow: 0 6px 22px rgba(13, 60, 45, 0.07);
+  border: 1px solid var(--evd-line);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: var(--evd-shadow);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
-.evd-panel h2 {
-  margin: 0 0 4px;
-  font-size: 21px;
+
+.evd-panel:hover {
+  transform: translateY(-3px);
 }
+
+.evd-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.evd-panel-head h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
 .evd-sub {
-  margin: 0 0 14px;
+  margin: 2px 0 0;
   font-size: 13px;
   color: var(--evd-muted);
 }
+
 .evd-text {
   margin: 0;
   font-size: 15px;
-  line-height: 1.75;
+  line-height: 1.8;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+
+/* Organizer */
+
 .evd-org {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--evd-soft);
+  border: 1px solid var(--evd-line);
 }
+
+.evd-org b {
+  display: block;
+}
+
+.evd-org small {
+  color: var(--evd-muted);
+}
+
 .evd-avatar {
   flex: none;
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: var(--evd-teal);
-  color: #fff;
   display: grid;
   place-items: center;
+  background: linear-gradient(135deg, #59ae6a, var(--evd-teal));
+  color: #fff;
   font-weight: 700;
   font-size: 18px;
 }
-.evd-org b {
-  display: block;
-}
-.evd-org small {
-  color: var(--evd-muted);
-}
+
 .evd-place {
   display: flex;
-  gap: 8px;
   align-items: flex-start;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1.5px dashed var(--evd-line);
+  gap: 10px;
+  margin-top: 14px;
   font-size: 14px;
+  color: var(--evd-muted);
 }
 
+.evd-place svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--evd-accent);
+}
+
+/* Related events */
+
 .evd-related {
-  margin-bottom: 22px;
+  margin-top: 40px;
 }
+
 .evd-related-head {
-  margin: 0 6px 14px;
+  margin-bottom: 18px;
 }
+
+.evd .ev-card {
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.evd .ev-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Loading skeleton */
+
 .evd-skel-hero {
-  height: 480px;
+  min-height: 360px;
   border-radius: 28px;
 }
 
-@media (max-width: 860px) {
+/* Tablet */
+
+@media (max-width: 900px) {
   .evd-cols {
     grid-template-columns: 1fr;
   }
-  .evd-art {
-    min-height: 360px;
-  }
 }
-@media (max-width: 480px) {
+
+/* Mobile */
+
+@media (max-width: 560px) {
+  .ev-page.evd {
+    --evd-nav: 84px;
+  }
+
   .evd-meta {
     grid-template-columns: 1fr;
   }
+
+  .evd-art {
+    min-height: 420px;
+  }
+
+  .evd-panel {
+    padding: 20px;
+  }
 }
+
+/* Accessibility: reduced motion */
+
 @media (prefers-reduced-motion: reduce) {
-  .evd * {
-    transition: none !important;
+  .evd-sway,
+  .evd-sun-glow,
+  .evd-cloud,
+  .evd-leaves span,
+  .evd .evd-join[data-joined="false"]:not(:disabled)::after {
+    animation: none;
+  }
+
+  .evd-photo,
+  .evd-panel,
+  .evd .ev-card,
+  .evd-ic,
+  .evd .evd-join {
+    transition: none;
   }
 }
