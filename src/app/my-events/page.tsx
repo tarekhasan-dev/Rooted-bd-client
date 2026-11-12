@@ -1,518 +1,734 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
   ArrowRight,
-  ArrowUpRight,
   CalendarDays,
+  Clock,
+  Eye,
   MapPin,
   Plus,
-  RefreshCw,
-  Sprout,
-  CalendarCheck,
-  History,
   Search,
+  Trash2,
+  Users,
 } from "lucide-react";
-import { motion } from "motion/react";
 
-import { api } from "@/lib/api";
+import { useLang } from "@/components/LanguageProvider";
+import {
+  getMyEvents,
+  deleteEvent,
+  type MyEventApiItem,
+} from "@/services/eventApi";
+import type { MyEvent } from "@/lib/my-events-store";
+import "./my-events.css";
 
-interface Event {
-  _id: string;
-  title: string;
-  description: string;
-  eventType: string;
-  thumbnail: string;
-  location: string;
-  eventDate: string;
-  creatorName: string;
-  creatorEmail: string;
-  createdAt: string;
-}
+type Filter = "all" | "pending" | "published" | "draft" | "ended";
+type Shown = Exclude<Filter, "all">;
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+const bn = {
+  home: "হোম",
+  page: "আমার ইভেন্ট",
+  chip: "আপনার কমিউনিটি যাত্রা",
+  title: "আপনার ইভেন্ট।",
+  title2: "আপনার প্রভাব।",
+  lead: "আপনার উদ্যোগগুলো সামলান আর প্রতিটি বৃক্ষরোপণের অগ্রগতি দেখুন।",
+  create: "নতুন ইভেন্ট তৈরি করুন",
+  total: "মোট ইভেন্ট",
+  upcoming: "আসন্ন",
+  ended: "শেষ হয়েছে",
+  people: "অংশগ্রহণকারী",
+  tabs: {
+    all: "সব",
+    pending: "অপেক্ষমাণ",
+    published: "প্রকাশিত",
+    draft: "খসড়া",
+    ended: "শেষ",
+  },
+  statusLabel: {
+    pending: "রিভিউয়ের অপেক্ষায়",
+    published: "প্রকাশিত",
+    draft: "খসড়া",
+    ended: "শেষ হয়েছে",
+  },
+  search: "আপনার ইভেন্ট খুঁজুন",
+  free: "বিনামূল্যে",
+  joined: "জন যোগ দিয়েছেন",
+  view: "দেখুন",
+  awaiting: "অনুমোদনের অপেক্ষায়",
+  finish: "প্রকাশ করতে ফর্ম খুলুন",
+  remove: "মুছুন",
+  emptyT: "আপনার প্রথম ইভেন্ট তৈরি করুন",
+  emptyP: "একটি উদ্যোগ শুরু করুন আর আপনার কমিউনিটিকে একত্র করুন।",
+  noMatch: "এই ফিল্টারে কোনো ইভেন্ট নেই।",
+  confirmT: "ইভেন্টটি মুছবেন?",
+  confirmP: "মুছে ফেললে এটা আর ফিরিয়ে আনা যাবে না।",
+  cancel: "বাতিল",
+  confirm: "মুছুন",
+  ctaT: "প্রতিটি পদক্ষেপ গুরুত্বপূর্ণ।",
+  ctaP: "আপনার পরের উদ্যোগ একটি পুরো কমিউনিটিকে অনুপ্রাণিত করতে পারে।",
+  untitled: "নামহীন ইভেন্ট",
+  categories: {
+    "Community Tree Plantation": "কমিউনিটি বৃক্ষরোপণ",
+    "Tree Care & Maintenance": "গাছের যত্ন ও পরিচর্যা",
+    "School & Campus Plantation": "স্কুল ও ক্যাম্পাসে বৃক্ষরোপণ",
+    "Tree Plantation Awareness": "বৃক্ষরোপণ সচেতনতা",
+  } as Record<string, string>,
+  currency: "৳",
 };
 
-export default function MyEventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+const en: typeof bn = {
+  home: "Home",
+  page: "My events",
+  chip: "Your community journey",
+  title: "Your events.",
+  title2: "Your impact.",
+  lead: "Manage your initiatives and track every plantation you organize.",
+  create: "Create new event",
+  total: "Total events",
+  upcoming: "Upcoming",
+  ended: "Ended",
+  people: "Participants",
+  tabs: {
+    all: "All",
+    pending: "Pending",
+    published: "Published",
+    draft: "Draft",
+    ended: "Ended",
+  },
+  statusLabel: {
+    pending: "Pending review",
+    published: "Published",
+    draft: "Draft",
+    ended: "Ended",
+  },
+  search: "Search your events",
+  free: "Free",
+  joined: "joined",
+  view: "View",
+  awaiting: "Awaiting approval",
+  finish: "Open the form to publish",
+  remove: "Delete",
+  emptyT: "Create your first event",
+  emptyP: "Start an initiative and bring your community together.",
+  noMatch: "No events match this filter.",
+  confirmT: "Delete this event?",
+  confirmP: "This can't be undone.",
+  cancel: "Cancel",
+  confirm: "Delete",
+  ctaT: "Every action matters.",
+  ctaP: "Your next initiative could inspire an entire community.",
+  untitled: "Untitled event",
+  categories: {
+    "Community Tree Plantation": "Community Tree Plantation",
+    "Tree Care & Maintenance": "Tree Care & Maintenance",
+    "School & Campus Plantation": "School & Campus Plantation",
+    "Tree Plantation Awareness": "Tree Plantation Awareness",
+  },
+  currency: "BDT",
+};
 
-  const fetchMyEvents = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
+const TX = { bn, en };
 
-      const response = await api("/events/my-events", {}, true);
+function todayString() {
+  const d = new Date();
 
-      setEvents(
-        Array.isArray(response.events) ? response.events : []
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load your events. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+// Backend API data -> Existing MyEvent UI format
+function mapApiEvent(event: MyEventApiItem): MyEvent {
+  const createdAt = new Date(event.createdAt).getTime();
+
+  return {
+    id: event._id,
+    title: event.title,
+    category: event.eventType,
+    description: event.description,
+    date: event.eventDate?.slice(0, 10) ?? "",
+    startTime: "",
+    endTime: "",
+    location: event.location,
+    maxParticipants: event.capacity ?? 0,
+    joined: 0,
+    feeType: "free",
+    feeAmount: 0,
+    items: event.bringItems ?? [],
+    status: event.status,
+    createdAt: Number.isFinite(createdAt) ? createdAt : Date.now(),
+  };
+}
+
+function shownStatus(event: MyEvent, today: string): Shown {
+  if (event.status === "published" && event.date && event.date < today) {
+    return "ended";
+  }
+
+  return event.status;
+}
+
+function useCountUp(target: number) {
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
-    void fetchMyEvents();
-  }, [fetchMyEvents]);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(target);
+      return;
+    }
 
-  const upcomingEvents = useMemo(
-    () =>
-      events.filter(
-        (event) => new Date(event.eventDate).getTime() >= Date.now()
-      ).length,
-    [events]
-  );
+    let raf = 0;
+    const start = performance.now();
+    const duration = 800;
 
-  const pastEvents = events.length - upcomingEvents;
+    const step = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
 
-  const filteredEvents = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
 
-    if (!search) return events;
+      if (p < 1) {
+        raf = requestAnimationFrame(step);
+      }
+    };
 
-    return events.filter((event) =>
-      [
-        event.title,
-        event.description,
-        event.eventType,
-        event.location,
-      ].some((field) =>
-        String(field ?? "").toLowerCase().includes(search)
-      )
-    );
-  }, [events, searchTerm]);
+    raf = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+
+  return value;
+}
+
+function Stat({
+  label,
+  value,
+  locale,
+}: {
+  label: string;
+  value: number;
+  locale: string;
+}) {
+  const shown = useCountUp(value);
 
   return (
-    <main className="min-h-screen bg-[#fafaf7] text-[#18352b]">
-      {/* HERO SECTION */}
+    <div className="mye-stat">
+      <small>{label}</small>
+      <b className="mye-display">{shown.toLocaleString(locale)}</b>
+    </div>
+  );
+}
 
-      <section className="relative overflow-hidden bg-[#18352b] px-5 pb-20 pt-28 text-white md:px-10 md:pb-24 md:pt-36">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[#d8e8b8]/10 blur-3xl" />
+function MiniLandscape() {
+  return (
+    <svg
+      className="mye-mini"
+      viewBox="0 0 240 90"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <rect width="240" height="90" fill="#d8ebb4" />
+      <circle cx="196" cy="24" r="14" fill="#f6c344" />
+      <path d="M0 62 Q70 40 140 58 T240 54 V90 H0Z" fill="#a9cf74" />
+      <path d="M0 76 Q80 62 160 74 T240 70 V90 H0Z" fill="#7fb25a" />
+      <rect x="52" y="48" width="4" height="24" fill="#6b4a2b" />
+      <circle cx="54" cy="42" r="14" fill="#59ae6a" />
+      <rect x="112" y="56" width="3" height="16" fill="#6b4a2b" />
+      <circle cx="113" cy="51" r="10" fill="#4f9d5d" />
+    </svg>
+  );
+}
 
-        <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#78945c]/10 blur-3xl" />
+const rise = (i: number) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: i * 0.07 },
+});
 
-        <div className="relative mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl"
-          >
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold tracking-[0.18em] text-[#d8e8b8]">
-              <Sprout size={15} />
-              YOUR COMMUNITY JOURNEY
-            </span>
+export default function MyEventsPage() {
+  const { lang } = useLang();
+  const tx = lang === "bn" ? TX.bn : TX.en;
+  const locale = lang === "bn" ? "bn-BD" : "en-US";
 
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
-              Your Events.
-              <br />
-              <span className="text-[#c8dc9c]">
-                Your Impact.
-              </span>
-            </h1>
+  const [events, setEvents] = useState<MyEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [today, setToday] = useState("");
+  const [now, setNow] = useState(0);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
+  const [toDelete, setToDelete] = useState<MyEvent | null>(null);
 
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/70 md:text-lg">
-              Every event begins with an idea. Manage your
-              initiatives, track your activities and keep
-              creating meaningful change in your community.
-            </p>
+  // Load events from backend API
+  useEffect(() => {
+    let cancelled = false;
 
-            <Link
-              href="/create-event"
-              className="mt-9 inline-flex items-center gap-2 rounded-full bg-[#c8dc9c] px-7 py-3.5 text-sm font-semibold text-[#18352b] transition hover:bg-white"
-            >
-              <Plus size={18} />
-              Create New Event
-              <ArrowUpRight size={17} />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+    const loadEvents = async () => {
+      setToday(todayString());
+      setNow(Date.now());
 
-      {/* MAIN CONTENT */}
+      try {
+        const data = await getMyEvents();
 
-      <section className="px-5 py-16 md:px-10 md:py-24">
-        <div className="mx-auto max-w-7xl">
+        if (!cancelled) {
+          setEvents(data.map(mapApiEvent));
+        }
+      } catch (error) {
+        console.error("Failed to load my events:", error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
 
-          {/* SECTION HEADING */}
+    void loadEvents();
 
-          <div className="mb-10">
-            <span className="mb-3 flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-[#78945c]">
-              <CalendarDays size={15} />
-              EVENT MANAGEMENT
-            </span>
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Manage Your Events
-            </h2>
+  const withStatus = useMemo(
+    () => events.map((e) => ({ e, s: shownStatus(e, today) })),
+    [events, today]
+  );
 
-            <p className="mt-3 max-w-xl text-sm leading-7 text-gray-500 md:text-base">
-              Keep track of the events you have created and
-              the positive changes you are bringing to life.
-            </p>
-          </div>
+  const counts = useMemo(() => {
+    const c = {
+      all: withStatus.length,
+      pending: 0,
+      published: 0,
+      draft: 0,
+      ended: 0,
+    };
 
-          {/* STATISTICS */}
+    withStatus.forEach(({ s }) => {
+      c[s] += 1;
+    });
 
-          <div className="mb-12 grid gap-5 sm:grid-cols-3">
+    return c;
+  }, [withStatus]);
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">
-                  Total Events
-                </span>
+  const upcoming = counts.pending + counts.published;
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#edf2e5] text-[#78945c]">
-                  <CalendarDays size={21} />
-                </div>
-              </div>
+  const people = events.reduce((sum, e) => sum + e.joined, 0);
 
-              <h3 className="mt-5 text-4xl font-semibold tabular-nums">
-                {loading ? "—" : events.length}
-              </h3>
+  const visible = withStatus.filter(({ e, s }) => {
+    if (filter !== "all" && s !== filter) return false;
 
-              <p className="mt-2 text-xs text-gray-400">
-                Events created by you
-              </p>
-            </motion.div>
+    const q = query.trim().toLowerCase();
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">
-                  Upcoming Events
-                </span>
+    if (!q) return true;
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <CalendarCheck size={21} />
-                </div>
-              </div>
+    return `${e.title} ${e.location}`.toLowerCase().includes(q);
+  });
 
-              <h3 className="mt-5 text-4xl font-semibold tabular-nums">
-                {loading ? "—" : upcomingEvents}
-              </h3>
+  // Delete event from backend
+  const confirmDelete = async () => {
+    if (!toDelete) return;
 
-              <p className="mt-2 text-xs text-gray-400">
-                Events yet to happen
-              </p>
-            </motion.div>
+    try {
+      await deleteEvent(toDelete.id);
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">
-                  Past Events
-                </span>
+      setEvents((list) =>
+        list.filter((e) => e.id !== toDelete.id)
+      );
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                  <History size={21} />
-                </div>
-              </div>
+      setToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+    }
+  };
 
-              <h3 className="mt-5 text-4xl font-semibold tabular-nums">
-                {loading ? "—" : pastEvents}
-              </h3>
+  const fmtDate = (value: string) =>
+    value
+      ? new Date(`${value}T00:00:00`).toLocaleDateString(locale, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—";
 
-              <p className="mt-2 text-xs text-gray-400">
-                Events already completed
-              </p>
-            </motion.div>
-          </div>
+  const tabs: Filter[] = [
+    "all",
+    "pending",
+    "published",
+    "draft",
+    "ended",
+  ];
 
-          {/* EVENT LIST HEADING */}
+  return (
+    <MotionConfig reducedMotion="user">
+      <main className="mye">
+        <div className="mye-wrap">
+          <nav className="mye-crumb" aria-label="Breadcrumb">
+            <Link href="/">{tx.home}</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{tx.page}</span>
+          </nav>
 
-          <div className="mb-7 flex flex-col justify-between gap-5 md:flex-row md:items-center">
-            <div>
-              <h3 className="text-2xl font-semibold">
-                Your Created Events
-              </h3>
+          {/* HERO */}
+          <section className="mye-hero">
+            <div className="mye-hero-l">
+              <motion.div className="mye-chips" {...rise(0)}>
+                <span className="mye-chip">{tx.chip}</span>
+              </motion.div>
 
-              <p className="mt-2 text-sm text-gray-500">
-                {loading
-                  ? "Loading your events..."
-                  : `${filteredEvents.length} of ${events.length} events`}
-              </p>
-            </div>
+              <motion.h1 className="mye-title mye-display" {...rise(1)}>
+                {tx.title}
+                <br />
+                <span>{tx.title2}</span>
+              </motion.h1>
 
-            <Link
-              href="/create-event"
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-            >
-              <Plus size={17} />
-              Host an Event
-            </Link>
-          </div>
+              <motion.p className="mye-lead" {...rise(2)}>
+                {tx.lead}
+              </motion.p>
 
-          {/* SEARCH */}
-
-          <div className="relative mb-10 w-full md:max-w-md">
-            <Search
-              size={19}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-
-            <input
-              type="search"
-              placeholder="Search your events..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3.5 pl-12 pr-4 text-sm outline-none transition focus:border-[#78945c] focus:ring-2 focus:ring-[#78945c]/10"
-            />
-          </div>
-
-          {/* LOADING STATE */}
-
-          {loading && (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="overflow-hidden rounded-2xl border border-gray-100 bg-white"
-                >
-                  <div className="h-56 animate-pulse bg-gray-200" />
-
-                  <div className="space-y-4 p-6">
-                    <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                    <div className="h-6 w-3/4 animate-pulse rounded bg-gray-200" />
-                    <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ERROR STATE */}
-
-          {!loading && error && (
-            <div className="rounded-2xl border border-red-100 bg-white px-6 py-16 text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
-                <RefreshCw size={27} />
-              </div>
-
-              <h3 className="text-xl font-semibold">
-                Something went wrong
-              </h3>
-
-              <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-gray-500">
-                {error}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => void fetchMyEvents()}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-              >
-                <RefreshCw size={16} />
-                Try Again
-              </button>
-            </div>
-          )}
-
-          {/* EMPTY STATE */}
-
-          {!loading && !error && filteredEvents.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#edf2e5] text-[#78945c]">
-                {events.length === 0 ? (
-                  <CalendarDays size={34} />
-                ) : (
-                  <Search size={34} />
-                )}
-              </div>
-
-              <h3 className="text-2xl font-semibold">
-                {events.length === 0
-                  ? "Your journey starts here."
-                  : "No matching events found."}
-              </h3>
-
-              <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-gray-500">
-                {events.length === 0
-                  ? "You haven't created any events yet. Start an initiative and bring your community together."
-                  : "Try another search term to find your events."}
-              </p>
-
-              {events.length === 0 ? (
-                <Link
-                  href="/create-event"
-                  className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#18352b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#315b47]"
-                >
-                  Create Your First Event
-                  <ArrowRight size={17} />
+              <motion.div {...rise(3)}>
+                <Link href="/create-event" className="mye-gold-btn">
+                  <Plus size={16} />
+                  {tx.create}
                 </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setSearchTerm("")}
-                  className="mt-7 rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold transition hover:bg-gray-100"
-                >
-                  Clear Search
-                </button>
-              )}
+              </motion.div>
             </div>
-          )}
 
-          {/* EVENT CARDS */}
+            <motion.div
+              className="mye-art"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <svg
+                className="mye-svg"
+                viewBox="0 0 480 360"
+                preserveAspectRatio="xMidYMid slice"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="myeSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#eaf5cc" />
+                    <stop offset="1" stopColor="#cfe6a6" />
+                  </linearGradient>
+                </defs>
 
-          {!loading && !error && filteredEvents.length > 0 && (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredEvents.map((event, index) => (
-                <motion.article
-                  key={event._id}
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.45,
-                    delay: index * 0.08,
-                  }}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                <rect width="480" height="360" fill="url(#myeSky)" />
+
+                <g>
+                  <circle
+                    className="mye-glow"
+                    cx="388"
+                    cy="72"
+                    r="66"
+                    fill="#f6c344"
+                    opacity=".28"
+                  />
+                  <circle cx="388" cy="72" r="40" fill="#f6c344" />
+                </g>
+
+                <path
+                  d="M0 250 Q140 190 280 240 T480 225 V360 H0Z"
+                  fill="#a9cf74"
+                />
+
+                <path
+                  d="M0 292 Q160 242 320 286 T480 270 V360 H0Z"
+                  fill="#7fb25a"
+                />
+
+                <g className="mye-sway">
+                  <rect x="96" y="216" width="6" height="70" fill="#6b4a2b" />
+                  <circle cx="99" cy="202" r="32" fill="#59ae6a" />
+                </g>
+
+                <g
+                  className="mye-sway"
+                  style={{ animationDelay: "-1.1s" }}
                 >
-                  {/* EVENT IMAGE */}
+                  <rect x="205" y="236" width="5" height="52" fill="#6b4a2b" />
+                  <circle cx="207" cy="224" r="24" fill="#4f9d5d" />
+                </g>
 
-                  <div className="relative h-56 overflow-hidden bg-[#e8eddf]">
-                    {event.thumbnail ? (
-                      <div
-                        role="img"
-                        aria-label={event.title}
-                        className="h-full w-full bg-cover bg-center transition duration-700 group-hover:scale-110"
-                        style={{
-                          backgroundImage: `url("${event.thumbnail}")`,
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[#78945c]">
-                        <Sprout size={55} />
+                <g
+                  className="mye-sway"
+                  style={{ animationDelay: "-2.2s" }}
+                >
+                  <rect x="318" y="212" width="6" height="74" fill="#6b4a2b" />
+                  <circle cx="321" cy="196" r="30" fill="#59ae6a" />
+                </g>
+              </svg>
+            </motion.div>
+          </section>
+
+          {/* STATS */}
+          <section className="mye-stats">
+            <Stat label={tx.total} value={counts.all} locale={locale} />
+            <Stat label={tx.upcoming} value={upcoming} locale={locale} />
+            <Stat label={tx.ended} value={counts.ended} locale={locale} />
+            <Stat label={tx.people} value={people} locale={locale} />
+          </section>
+
+          {/* LIST */}
+          <section className="mye-panel">
+            <div className="mye-toolbar">
+              <div className="mye-tabs" role="tablist">
+                {tabs.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === key}
+                    className={filter === key ? "is-on" : ""}
+                    onClick={() => setFilter(key)}
+                  >
+                    {tx.tabs[key]}{" "}
+                    <span>{counts[key].toLocaleString(locale)}</span>
+                  </button>
+                ))}
+              </div>
+
+              <label className="mye-search">
+                <Search size={15} />
+                <input
+                  type="search"
+                  placeholder={tx.search}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </label>
+            </div>
+
+            {loading && (
+              <div className="mye-grid">
+                {[0, 1].map((i) => (
+                  <div key={i} className="mye-skel" />
+                ))}
+              </div>
+            )}
+
+            {!loading && events.length === 0 && (
+              <div className="mye-empty">
+                <svg
+                  viewBox="0 0 120 90"
+                  width="120"
+                  height="90"
+                  aria-hidden="true"
+                >
+                  <ellipse cx="60" cy="80" rx="46" ry="6" fill="#dcebc6" />
+
+                  <g className="mye-sway">
+                    <rect x="57" y="42" width="6" height="38" fill="#6b4a2b" />
+                    <circle cx="60" cy="34" r="22" fill="#59ae6a" />
+                  </g>
+                </svg>
+
+                <h3 className="mye-display">{tx.emptyT}</h3>
+                <p>{tx.emptyP}</p>
+
+                <Link href="/create-event" className="mye-gold-btn">
+                  <Plus size={16} />
+                  {tx.create}
+                </Link>
+              </div>
+            )}
+
+            {!loading && events.length > 0 && visible.length === 0 && (
+              <p className="mye-nomatch">{tx.noMatch}</p>
+            )}
+
+            <div className="mye-grid">
+              <AnimatePresence mode="popLayout">
+                {visible.map(({ e, s }, index) => {
+                  const isNew = now - e.createdAt < 60000;
+
+                  const percent = e.maxParticipants
+                    ? Math.min(
+                        100,
+                        (e.joined / e.maxParticipants) * 100
+                      )
+                    : 0;
+
+                  return (
+                    <motion.article
+                      key={e.id}
+                      layout
+                      className={`mye-card${isNew ? " is-new" : ""}`}
+                      data-status={s}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.92 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.06,
+                      }}
+                    >
+                      <div className="mye-card-pic">
+                        <MiniLandscape />
+
+                        <span className={`mye-status mye-status--${s}`}>
+                          {tx.statusLabel[s]}
+                        </span>
                       </div>
-                    )}
 
-                    <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-[#315b47] shadow-sm">
-                      {event.eventType || "Community"}
-                    </span>
-
-                    <span className="absolute right-4 top-4 rounded-full bg-[#18352b]/90 px-3 py-2 text-xs font-semibold text-white">
-                      {new Date(event.eventDate).getTime() >= Date.now()
-                        ? "Upcoming"
-                        : "Completed"}
-                    </span>
-                  </div>
-
-                  {/* EVENT INFORMATION */}
-
-                  <div className="p-6">
-                    <div className="mb-4 flex items-center gap-2 text-xs font-medium text-[#78945c]">
-                      <CalendarDays size={15} />
-                      {formatDate(event.eventDate)}
-                    </div>
-
-                    <h4 className="line-clamp-2 text-xl font-semibold leading-snug transition group-hover:text-[#78945c]">
-                      {event.title}
-                    </h4>
-
-                    <p className="mt-3 line-clamp-2 text-sm leading-7 text-gray-500">
-                      {event.description}
-                    </p>
-
-                    <div className="mt-5 flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin
-                        size={16}
-                        className="shrink-0 text-[#78945c]"
-                      />
-                      <span className="line-clamp-1">
-                        {event.location}
-                      </span>
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5">
-                      <div className="min-w-0">
-                        <span className="text-xs text-gray-400">
-                          Created on
+                      <div className="mye-card-body">
+                        <span className="mye-cat">
+                          {tx.categories[e.category] ?? e.category}
                         </span>
 
-                        <p className="truncate text-sm font-semibold text-[#315b47]">
-                          {formatDate(event.createdAt)}
-                        </p>
+                        <h3 className="mye-display">
+                          {e.title || tx.untitled}
+                        </h3>
+
+                        <ul className="mye-meta">
+                          <li>
+                            <CalendarDays size={14} />
+                            {fmtDate(e.date)}
+                          </li>
+
+                          {e.startTime && (
+                            <li>
+                              <Clock size={14} />
+                              {e.startTime}
+                              {e.endTime ? ` – ${e.endTime}` : ""}
+                            </li>
+                          )}
+
+                          {e.location && (
+                            <li>
+                              <MapPin size={14} />
+                              {e.location}
+                            </li>
+                          )}
+                        </ul>
+
+                        <div className="mye-capline">
+                          <span>
+                            <Users size={14} />
+                            {e.joined.toLocaleString(locale)} /{" "}
+                            {e.maxParticipants.toLocaleString(locale)}{" "}
+                            {tx.joined}
+                          </span>
+
+                          <span>
+                            {e.feeType === "free"
+                              ? tx.free
+                              : `${tx.currency} ${e.feeAmount.toLocaleString(locale)}`}
+                          </span>
+                        </div>
+
+                        <div className="mye-bar">
+                          <motion.i
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percent}%` }}
+                            transition={{
+                              duration: 0.8,
+                              delay: 0.2,
+                            }}
+                          />
+                        </div>
+
+                        <div className="mye-actions">
+                          {s === "published" || s === "ended" ? (
+                            <Link
+                              href={`/events/${e.id}`}
+                              className="mye-gold-btn mye-sm"
+                            >
+                              <Eye size={14} />
+                              {tx.view}
+                            </Link>
+                          ) : s === "draft" ? (
+                            <Link
+                              href="/create-event"
+                              className="mye-ghost-btn"
+                            >
+                              {tx.finish}
+                              <ArrowRight size={14} />
+                            </Link>
+                          ) : (
+                            <span className="mye-ghost-btn is-static">
+                              {tx.awaiting}
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            className="mye-del"
+                            aria-label={tx.remove}
+                            onClick={() => setToDelete(e)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </div>
-
-                      <Link
-                        href={`/events/${event._id}`}
-                        aria-label={`View details for ${event.title}`}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#edf2e5] text-[#315b47] transition hover:bg-[#18352b] hover:text-white"
-                      >
-                        <ArrowUpRight size={20} />
-                      </Link>
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
+                    </motion.article>
+                  );
+                })}
+              </AnimatePresence>
             </div>
-          )}
+          </section>
+
+          {/* CTA */}
+          <section className="mye-cta">
+            <div>
+              <h2 className="mye-display">{tx.ctaT}</h2>
+              <p>{tx.ctaP}</p>
+            </div>
+
+            <Link href="/create-event" className="mye-cta-btn">
+              {tx.create}
+              <ArrowRight size={16} />
+            </Link>
+          </section>
         </div>
-      </section>
 
-      {/* BOTTOM CTA */}
-
-      <section className="bg-[#edf2e5] px-5 py-16 md:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 md:flex-row md:items-center">
-          <div>
-            <span className="text-xs font-bold tracking-[0.18em] text-[#78945c]">
-              KEEP MAKING A DIFFERENCE
-            </span>
-
-            <h2 className="mt-3 text-3xl font-semibold leading-tight">
-              Every action matters.
-            </h2>
-
-            <p className="mt-3 max-w-xl text-sm leading-7 text-gray-600">
-              Your next initiative could inspire an entire
-              community. Keep building something meaningful.
-            </p>
-          </div>
-
-          <Link
-            href="/events"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#18352b] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#315b47]"
+        {/* Delete confirm */}
+        {toDelete && (
+          <div
+            className="mye-backdrop"
+            role="presentation"
+            onClick={() => setToDelete(null)}
           >
-            Explore Events
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      </section>
-    </main>
+            <div
+              className="mye-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mye-del-title"
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              <h2 id="mye-del-title" className="mye-display">
+                {tx.confirmT}
+              </h2>
+
+              <p>
+                <b>{toDelete.title || tx.untitled}</b>
+                <br />
+                {tx.confirmP}
+              </p>
+
+              <div className="mye-modal-actions">
+                <button
+                  type="button"
+                  className="mye-ghost-btn"
+                  onClick={() => setToDelete(null)}
+                >
+                  {tx.cancel}
+                </button>
+
+                <button
+                  type="button"
+                  className="mye-danger-btn"
+                  onClick={confirmDelete}
+                >
+                  {tx.confirm}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </MotionConfig>
   );
 }

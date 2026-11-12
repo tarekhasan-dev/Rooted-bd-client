@@ -1,4 +1,3 @@
-
 "use client";
 
 import "@/styles/events.css";
@@ -13,6 +12,7 @@ import {
   ArrowRight,
   CalendarDays,
   Clock,
+  Info,
   Leaf,
   MapPin,
   RefreshCw,
@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { motion } from "motion/react";
+import { MotionConfig, motion } from "motion/react";
 
 import { useLang } from "@/components/LanguageProvider";
 import { authClient } from "@/lib/auth-client";
@@ -105,6 +105,65 @@ const TX = {
 } as const;
 
 type Status = "loading" | "ready" | "notfound" | "error";
+
+// Scroll-reveal settings shared by the panels and cards
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-40px" },
+  transition: { duration: 0.45 },
+};
+
+// Illustration shown when the event has no cover photo
+function Landscape() {
+  return (
+    <svg
+      className="evd-svg"
+      viewBox="0 0 480 360"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="evdSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#eaf5cc" />
+          <stop offset="1" stopColor="#cfe6a6" />
+        </linearGradient>
+      </defs>
+      <rect width="480" height="360" fill="url(#evdSky)" />
+
+      <circle
+        className="evd-sun-glow"
+        cx="388"
+        cy="72"
+        r="66"
+        fill="#f6c344"
+        opacity=".28"
+      />
+      <circle cx="388" cy="72" r="40" fill="#f6c344" />
+
+      <g className="evd-cloud" opacity=".85">
+        <ellipse cx="90" cy="70" rx="36" ry="12" fill="#fff" />
+        <ellipse cx="116" cy="60" rx="24" ry="11" fill="#fff" />
+      </g>
+
+      <path d="M0 250 Q140 190 280 240 T480 225 V360 H0Z" fill="#a9cf74" />
+      <path d="M0 292 Q160 242 320 286 T480 270 V360 H0Z" fill="#7fb25a" />
+
+      <g className="evd-sway">
+        <rect x="96" y="216" width="6" height="70" fill="#6b4a2b" />
+        <circle cx="99" cy="202" r="32" fill="#59ae6a" />
+      </g>
+      <g className="evd-sway" style={{ animationDelay: "-1.1s" }}>
+        <rect x="205" y="236" width="5" height="52" fill="#6b4a2b" />
+        <circle cx="207" cy="224" r="24" fill="#4f9d5d" />
+      </g>
+      <g className="evd-sway" style={{ animationDelay: "-2.2s" }}>
+        <rect x="318" y="212" width="6" height="74" fill="#6b4a2b" />
+        <circle cx="321" cy="196" r="30" fill="#59ae6a" />
+      </g>
+    </svg>
+  );
+}
 
 // Main Event Detail Component
 function EventDetailContent() {
@@ -197,9 +256,7 @@ function EventDetailContent() {
       .then((list) => {
         if (cancelled) return;
 
-        const others = list.filter(
-          (item) => item._id !== eventId
-        );
+        const others = list.filter((item) => item._id !== eventId);
 
         const type = String(eventType ?? "")
           .trim()
@@ -212,9 +269,7 @@ function EventDetailContent() {
               .toLowerCase() === type
         );
 
-        const rest = others.filter(
-          (item) => !same.includes(item)
-        );
+        const rest = others.filter((item) => !same.includes(item));
 
         setRelated([...same, ...rest].slice(0, 3));
       })
@@ -266,10 +321,7 @@ function EventDetailContent() {
 
     if (Number.isNaN(date.getTime())) return "";
 
-    if (
-      date.getHours() === 0 &&
-      date.getMinutes() === 0
-    ) {
+    if (date.getHours() === 0 && date.getMinutes() === 0) {
       return "";
     }
 
@@ -307,9 +359,7 @@ function EventDetailContent() {
       }
     } catch (err) {
       setNotice(
-        err instanceof Error && err.message
-          ? err.message
-          : tx.failed
+        err instanceof Error && err.message ? err.message : tx.failed
       );
     } finally {
       setBusy(false);
@@ -320,12 +370,9 @@ function EventDetailContent() {
     ? new Date(event.eventDate).getTime() < Date.now()
     : false;
 
-  const time = event
-    ? formatTime(event.eventDate)
-    : "";
+  const time = event ? formatTime(event.eventDate) : "";
 
-  const creator =
-    event?.creatorName || t("evp_member");
+  const creator = event?.creatorName || t("evp_member");
 
   const joinLabel = isPast
     ? tx.ended
@@ -336,399 +383,369 @@ function EventDetailContent() {
         : tx.loginJoin;
 
   return (
-    <main className="ev-page evd">
-      <div className="ev-wrap">
+    <MotionConfig reducedMotion="user">
+      <main className="ev-page evd">
+        <div className="ev-wrap">
+          <Link href="/events" className="evd-back">
+            <ArrowLeft size={16} />
+            {tx.back}
+          </Link>
 
-        <Link href="/events" className="evd-back">
-          <ArrowLeft size={16} />
-          {tx.back}
-        </Link>
+          {status === "loading" && <div className="ev-skel evd-skel-hero" />}
 
-        {status === "loading" && (
-          <div className="ev-skel evd-skel-hero" />
-        )}
+          {status === "notfound" && (
+            <div className="ev-empty">
+              <span className="ev-empty-icon">
+                <CalendarDays size={28} />
+              </span>
 
-        {status === "notfound" && (
-          <div className="ev-empty">
-            <span className="ev-empty-icon">
-              <CalendarDays size={28} />
-            </span>
+              <h3>{tx.nfTitle}</h3>
+              <p>{tx.nfText}</p>
 
-            <h3>{tx.nfTitle}</h3>
-            <p>{tx.nfText}</p>
+              <Link href="/events" className="ev-btn ev-btn-wide">
+                {tx.browse}
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          )}
 
-            <Link
-              href="/events"
-              className="ev-btn ev-btn-wide"
-            >
-              {tx.browse}
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        )}
+          {status === "error" && (
+            <div className="ev-empty">
+              <span className="ev-empty-icon">
+                <RefreshCw size={26} />
+              </span>
 
-        {status === "error" && (
-          <div className="ev-empty">
-            <span className="ev-empty-icon">
-              <RefreshCw size={26} />
-            </span>
+              <h3>{tx.errTitle}</h3>
+              <p>{errorMsg || t("evp_load_failed")}</p>
 
-            <h3>{tx.errTitle}</h3>
-            <p>{errorMsg || t("evp_load_failed")}</p>
+              <button
+                type="button"
+                className="ev-btn ev-btn-wide"
+                onClick={() => void loadEvent()}
+              >
+                <RefreshCw size={16} />
+                {t("evp_try_again")}
+              </button>
+            </div>
+          )}
 
-            <button
-              type="button"
-              className="ev-btn ev-btn-wide"
-              onClick={() => void loadEvent()}
-            >
-              <RefreshCw size={16} />
-              {t("evp_try_again")}
-            </button>
-          </div>
-        )}
-
-        {status === "ready" && event && (
-          <>
-            <motion.section
-              className="ev-hero"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-            >
-              <div className="ev-hero-left">
-
-                <div className="evd-chips">
-                  <span className="ev-pill">
-                    <Leaf size={12} />
-                    {event.eventType || t("type_default")}
-                  </span>
-
-                  {isPast && (
-                    <span className="evd-ended">
-                      {tx.endedBadge}
-                    </span>
-                  )}
-                </div>
-
-                <h1 className="ev-display ev-title">
-                  {event.title}
-                </h1>
-
-                <ul className="evd-meta">
-                  <li>
-                    <span className="evd-ic">
-                      <CalendarDays size={16} />
+          {status === "ready" && event && (
+            <>
+              <motion.section
+                className="ev-hero"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45 }}
+              >
+                <div className="ev-hero-left">
+                  <div className="evd-chips">
+                    <span className="ev-pill">
+                      <Leaf size={12} />
+                      {event.eventType || t("type_default")}
                     </span>
 
-                    <div>
-                      <small>{tx.date}</small>
-                      <b>{formatDate(event.eventDate)}</b>
-                    </div>
-                  </li>
+                    {isPast && (
+                      <span className="evd-ended">{tx.endedBadge}</span>
+                    )}
+                  </div>
 
-                  {time && (
+                  <h1 className="ev-display ev-title">{event.title}</h1>
+
+                  <ul className="evd-meta">
                     <li>
                       <span className="evd-ic">
-                        <Clock size={16} />
+                        <CalendarDays size={16} />
                       </span>
 
                       <div>
-                        <small>{tx.time}</small>
-                        <b>{time}</b>
+                        <small>{tx.date}</small>
+                        <b>{formatDate(event.eventDate)}</b>
                       </div>
                     </li>
+
+                    {time && (
+                      <li>
+                        <span className="evd-ic">
+                          <Clock size={16} />
+                        </span>
+
+                        <div>
+                          <small>{tx.time}</small>
+                          <b>{time}</b>
+                        </div>
+                      </li>
+                    )}
+
+                    <li>
+                      <span className="evd-ic">
+                        <MapPin size={16} />
+                      </span>
+
+                      <div>
+                        <small>{tx.place}</small>
+                        <b>{event.location}</b>
+                      </div>
+                    </li>
+
+                    <li>
+                      <span className="evd-ic">
+                        <User size={16} />
+                      </span>
+
+                      <div>
+                        <small>{tx.host}</small>
+                        <b>{creator}</b>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <p className="evd-count" aria-live="polite">
+                    <Users size={18} />
+
+                    {count === 0 ? (
+                      <span>{tx.nobody}</span>
+                    ) : (
+                      <span>
+                        <motion.strong
+                          key={count}
+                          initial={{ scale: 1.4 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 18,
+                          }}
+                        >
+                          {count.toLocaleString(locale)}
+                        </motion.strong>{" "}
+                        {tx.going}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="ev-art evd-art">
+                  {event.thumbnail ? (
+                    <div
+                      className="evd-photo"
+                      role="img"
+                      aria-label={event.title}
+                      style={{
+                        backgroundImage: `url("${event.thumbnail}")`,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="evd-photo evd-photo--empty"
+                      aria-hidden="true"
+                    >
+                      <Landscape />
+                    </div>
                   )}
 
-                  <li>
+                  <div className="evd-leaves" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+
+                  <div className="ev-inset">
+                    <span className="ev-pill">
+                      <Leaf size={12} />
+                      {t("community")}
+                    </span>
+
+                    <h2>{tx.joinTitle}</h2>
+                    <p>{tx.joinText}</p>
+
+                    <button
+                      type="button"
+                      className="ev-amber evd-join"
+                      data-joined={joined}
+                      aria-pressed={joined}
+                      disabled={isPast || busy}
+                      onClick={() => void handleJoin()}
+                    >
+                      {joinLabel}
+
+                      {!joined && !isPast && <ArrowRight size={16} />}
+                    </button>
+
+                    {joined && !isPast && (
+                      <button
+                        type="button"
+                        className="evd-leave"
+                        disabled={busy}
+                        onClick={() => void handleJoin()}
+                      >
+                        {tx.leave}
+                      </button>
+                    )}
+
+                    <p className="evd-notice" role="status">
+                      {notice}
+                    </p>
+                  </div>
+                </div>
+              </motion.section>
+
+              <div className="evd-cols">
+                <motion.section className="evd-panel" {...reveal}>
+                  <div className="evd-panel-head">
                     <span className="evd-ic">
-                      <MapPin size={16} />
+                      <Info size={16} />
                     </span>
 
                     <div>
-                      <small>{tx.place}</small>
-                      <b>{event.location}</b>
+                      <h2 className="ev-display">{tx.about}</h2>
+                      <p className="evd-sub">{tx.aboutSub}</p>
                     </div>
-                  </li>
+                  </div>
 
-                  <li>
+                  <p className="evd-text">{event.description}</p>
+                </motion.section>
+
+                <motion.section
+                  className="evd-panel"
+                  {...reveal}
+                  transition={{ duration: 0.45, delay: 0.08 }}
+                >
+                  <div className="evd-panel-head">
                     <span className="evd-ic">
                       <User size={16} />
                     </span>
 
                     <div>
-                      <small>{tx.host}</small>
-                      <b>{creator}</b>
+                      <h2 className="ev-display">{tx.organizer}</h2>
+                      <p className="evd-sub">{tx.organizerSub}</p>
                     </div>
-                  </li>
-                </ul>
+                  </div>
 
-                <p className="evd-count" aria-live="polite">
-                  <Users size={18} />
-
-                  {count === 0 ? (
-                    <span>{tx.nobody}</span>
-                  ) : (
-                    <span>
-                      <motion.strong
-                        key={count}
-                        initial={{ scale: 1.4 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 380,
-                          damping: 18,
-                        }}
-                      >
-                        {count.toLocaleString(locale)}
-                      </motion.strong>{" "}
-                      {tx.going}
+                  <div className="evd-org">
+                    <span className="evd-avatar" aria-hidden="true">
+                      {creator.trim().charAt(0).toUpperCase()}
                     </span>
-                  )}
-                </p>
+
+                    <div>
+                      <b>{creator}</b>
+                      <small>{t("evp_organized_by")}</small>
+                    </div>
+                  </div>
+
+                  <div className="evd-place">
+                    <MapPin size={16} />
+                    <span>{event.location}</span>
+                  </div>
+                </motion.section>
               </div>
 
-              <div className="ev-art evd-art">
-                {event.thumbnail ? (
-                  <div
-                    className="evd-photo"
-                    role="img"
-                    aria-label={event.title}
-                    style={{
-                      backgroundImage: `url("${event.thumbnail}")`,
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="evd-photo evd-photo--empty"
-                    aria-hidden="true"
-                  >
-                    <Sprout size={96} />
-                  </div>
-                )}
+              {related.length > 0 && (
+                <section className="evd-related">
+                  <motion.div className="evd-related-head" {...reveal}>
+                    <h2 className="ev-display ev-h2">{tx.related}</h2>
 
-                <div className="ev-inset">
-                  <span className="ev-pill">
-                    <Leaf size={12} />
-                    {t("community")}
-                  </span>
+                    <p className="ev-sub">{tx.relatedSub}</p>
+                  </motion.div>
 
-                  <h2>{tx.joinTitle}</h2>
-                  <p>{tx.joinText}</p>
-
-                  <button
-                    type="button"
-                    className="ev-amber evd-join"
-                    data-joined={joined}
-                    aria-pressed={joined}
-                    disabled={isPast || busy}
-                    onClick={() => void handleJoin()}
-                  >
-                    {joinLabel}
-
-                    {!joined && !isPast && (
-                      <ArrowRight size={16} />
-                    )}
-                  </button>
-
-                  {joined && !isPast && (
-                    <button
-                      type="button"
-                      className="evd-leave"
-                      disabled={busy}
-                      onClick={() => void handleJoin()}
-                    >
-                      {tx.leave}
-                    </button>
-                  )}
-
-                  <p className="evd-notice" role="status">
-                    {notice}
-                  </p>
-                </div>
-              </div>
-            </motion.section>
-
-            <div className="evd-cols">
-
-              <section className="evd-panel">
-                <h2 className="ev-display">
-                  {tx.about}
-                </h2>
-
-                <p className="evd-sub">
-                  {tx.aboutSub}
-                </p>
-
-                <p className="evd-text">
-                  {event.description}
-                </p>
-              </section>
-
-              <section className="evd-panel">
-                <h2 className="ev-display">
-                  {tx.organizer}
-                </h2>
-
-                <p className="evd-sub">
-                  {tx.organizerSub}
-                </p>
-
-                <div className="evd-org">
-                  <span
-                    className="evd-avatar"
-                    aria-hidden="true"
-                  >
-                    {creator.trim().charAt(0).toUpperCase()}
-                  </span>
-
-                  <div>
-                    <b>{creator}</b>
-                    <small>{t("evp_organized_by")}</small>
-                  </div>
-                </div>
-
-                <div className="evd-place">
-                  <MapPin size={16} />
-                  <span>{event.location}</span>
-                </div>
-              </section>
-
-            </div>
-
-            {related.length > 0 && (
-              <section className="evd-related">
-
-                <div className="evd-related-head">
-                  <h2 className="ev-display ev-h2">
-                    {tx.related}
-                  </h2>
-
-                  <p className="ev-sub">
-                    {tx.relatedSub}
-                  </p>
-                </div>
-
-                <div className="ev-grid">
-                  {related.map((item) => (
-                    <article
-                      key={item._id}
-                      className="ev-card"
-                    >
-                      <div
-                        className="ev-thumb"
-                        role={
-                          item.thumbnail ? "img" : undefined
-                        }
-                        aria-label={
-                          item.thumbnail
-                            ? item.title
-                            : undefined
-                        }
-                        style={
-                          item.thumbnail
-                            ? {
-                                backgroundImage: `url("${item.thumbnail}")`,
-                              }
-                            : undefined
-                        }
+                  <div className="ev-grid">
+                    {related.map((item, index) => (
+                      <motion.article
+                        key={item._id}
+                        className="ev-card"
+                        {...reveal}
+                        transition={{ duration: 0.45, delay: index * 0.08 }}
                       >
-                        {!item.thumbnail && (
-                          <Sprout size={54} />
-                        )}
-                      </div>
-
-                      <div className="ev-card-body">
-                        <span className="ev-pill">
-                          {item.eventType || t("type_default")}
-                        </span>
-
-                        <h3>{item.title}</h3>
-
-                        <p className="ev-desc">
-                          {item.description}
-                        </p>
-
-                        <ul className="ev-meta">
-                          <li>
-                            <CalendarDays size={15} />
-                            <span>
-                              {formatShortDate(item.eventDate)}
-                            </span>
-                          </li>
-
-                          <li>
-                            <MapPin size={15} />
-                            <span>{item.location}</span>
-                          </li>
-                        </ul>
-
-                        <Link
-                          href={`/events/${item._id}`}
-                          className="ev-btn"
+                        <div
+                          className="ev-thumb"
+                          role={item.thumbnail ? "img" : undefined}
+                          aria-label={item.thumbnail ? item.title : undefined}
+                          style={
+                            item.thumbnail
+                              ? {
+                                  backgroundImage: `url("${item.thumbnail}")`,
+                                }
+                              : undefined
+                          }
                         >
-                          {t("view_event")}
-                        </Link>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                          {!item.thumbnail && <Sprout size={54} />}
+                        </div>
 
-              </section>
-            )}
-          </>
-        )}
+                        <div className="ev-card-body">
+                          <span className="ev-pill">
+                            {item.eventType || t("type_default")}
+                          </span>
 
-        {!isPending && !userEmail && status !== "loading" && (
-          <section className="ev-cta">
-            <div>
-              <h2 className="ev-display">
-                {t("evp_cta_title")}
-              </h2>
+                          <h3>{item.title}</h3>
 
-              <p>{t("evp_cta_text")}</p>
-            </div>
+                          <p className="ev-desc">{item.description}</p>
 
-            <Link
-              href={JOIN_HREF}
-              className="ev-amber"
-            >
-              {t("join_community")}
-              <ArrowRight size={16} />
-            </Link>
-          </section>
-        )}
+                          <ul className="ev-meta">
+                            <li>
+                              <CalendarDays size={15} />
+                              <span>{formatShortDate(item.eventDate)}</span>
+                            </li>
 
-        {!isPending && userEmail && status === "ready" && (
-          <section className="ev-cta">
-            <div>
-              <h2 className="ev-display">
-                {t("evp_card_title")}
-              </h2>
+                            <li>
+                              <MapPin size={15} />
+                              <span>{item.location}</span>
+                            </li>
+                          </ul>
 
-              <p>{t("evp_card_text")}</p>
-            </div>
+                          <Link
+                            href={`/events/${item._id}`}
+                            className="ev-btn"
+                          >
+                            {t("view_event")}
+                          </Link>
+                        </div>
+                      </motion.article>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
 
-            <Link
-              href={CREATE_EVENT_HREF}
-              className="ev-amber"
-            >
-              {t("host_event")}
-              <ArrowRight size={16} />
-            </Link>
-          </section>
-        )}
+          {!isPending && !userEmail && status !== "loading" && (
+            <motion.section className="ev-cta" {...reveal}>
+              <div>
+                <h2 className="ev-display">{t("evp_cta_title")}</h2>
 
-      </div>
-    </main>
+                <p>{t("evp_cta_text")}</p>
+              </div>
+
+              <Link href={JOIN_HREF} className="ev-amber">
+                {t("join_community")}
+                <ArrowRight size={16} />
+              </Link>
+            </motion.section>
+          )}
+
+          {!isPending && userEmail && status === "ready" && (
+            <motion.section className="ev-cta" {...reveal}>
+              <div>
+                <h2 className="ev-display">{t("evp_card_title")}</h2>
+
+                <p>{t("evp_card_text")}</p>
+              </div>
+
+              <Link href={CREATE_EVENT_HREF} className="ev-amber">
+                {t("host_event")}
+                <ArrowRight size={16} />
+              </Link>
+            </motion.section>
+          )}
+        </div>
+      </main>
+    </MotionConfig>
   );
 }
 
 // Suspense boundary for useParams()
 export default function EventDetailPage() {
   return (
-    <Suspense
-      fallback={<div className="min-h-screen" />}
-    >
+    <Suspense fallback={<div className="min-h-screen" />}>
       <EventDetailContent />
     </Suspense>
   );

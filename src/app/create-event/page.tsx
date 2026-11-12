@@ -1,8 +1,24 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Clock,
+  ImagePlus,
+  Info,
+  Leaf,
+  MapPin,
+  Plus,
+  Sparkles,
+  User,
+  Users,
+  X,
+} from "lucide-react";
+import { MotionConfig, motion } from "motion/react";
 import "./create-event.css";
 
 const CATEGORIES = [
@@ -11,6 +27,8 @@ const CATEGORIES = [
   "School & Campus Plantation",
   "Tree Plantation Awareness",
 ];
+
+const CATEGORY_ICONS = ["🌳", "🌿", "🏫", "🌱"];
 
 type EventForm = {
   title: string;
@@ -42,115 +60,62 @@ const INITIAL_FORM: EventForm = {
   feeAmount: "",
 };
 
-function TreeIllustration() {
+const rise = (i: number) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: i * 0.07 },
+});
+
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-40px" },
+  transition: { duration: 0.45 },
+};
+
+function Landscape() {
   return (
     <svg
-      className="evc-tree-illustration"
-      viewBox="0 0 520 390"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="People planting a tree illustration"
-      role="img"
+      className="evc-svg"
+      viewBox="0 0 480 360"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
     >
-      <ellipse cx="264" cy="348" rx="205" ry="20" fill="#DDEBD1" />
+      <defs>
+        <linearGradient id="evcSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#eaf5cc" />
+          <stop offset="1" stopColor="#cfe6a6" />
+        </linearGradient>
+      </defs>
+      <rect width="480" height="360" fill="url(#evcSky)" />
 
-      <path
-        d="M265 320V148"
-        stroke="#986A3C"
-        strokeWidth="18"
-        strokeLinecap="round"
-      />
-      <path
-        d="M264 215L218 174M264 188L306 145"
-        stroke="#986A3C"
-        strokeWidth="10"
-        strokeLinecap="round"
-      />
+      <g className="evc-sun">
+        <circle
+          className="evc-sun-glow"
+          cx="388"
+          cy="72"
+          r="66"
+          fill="#f6c344"
+          opacity=".28"
+        />
+        <circle cx="388" cy="72" r="40" fill="#f6c344" />
+      </g>
 
-      <circle cx="264" cy="105" r="68" fill="#79B66B" />
-      <circle cx="212" cy="130" r="48" fill="#91C67B" />
-      <circle cx="312" cy="131" r="48" fill="#69A85D" />
-      <circle cx="235" cy="67" r="43" fill="#A3CE87" />
-      <circle cx="296" cy="61" r="43" fill="#80B96B" />
+      <path d="M0 250 Q140 190 280 240 T480 225 V360 H0Z" fill="#a9cf74" />
+      <path d="M0 292 Q160 242 320 286 T480 270 V360 H0Z" fill="#7fb25a" />
 
-      <path
-        d="M78 334C105 302 142 300 171 319"
-        stroke="#6C9E58"
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M365 327C397 296 435 300 456 320"
-        stroke="#6C9E58"
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
-
-      <circle cx="130" cy="232" r="18" fill="#E7A36B" />
-      <path d="M111 228C111 206 148 202 150 227" fill="#294C3D" />
-      <path
-        d="M109 254L151 254L164 315H97L109 254Z"
-        fill="#E2A15F"
-      />
-      <path
-        d="M113 315L106 344M149 315L158 344"
-        stroke="#294C3D"
-        strokeWidth="11"
-        strokeLinecap="round"
-      />
-      <path
-        d="M108 270L77 295"
-        stroke="#E7A36B"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-
-      <circle cx="387" cy="239" r="17" fill="#C98759" />
-      <path d="M370 235C370 212 403 209 406 235" fill="#294C3D" />
-      <path
-        d="M366 258L407 258L419 315H354L366 258Z"
-        fill="#5C9D79"
-      />
-      <path
-        d="M370 315L362 344M404 315L414 344"
-        stroke="#294C3D"
-        strokeWidth="11"
-        strokeLinecap="round"
-      />
-      <path
-        d="M367 273L336 292"
-        stroke="#C98759"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-
-      <path
-        d="M171 319C191 307 215 306 235 320"
-        stroke="#B8D69F"
-        strokeWidth="8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M296 320C320 305 341 305 360 319"
-        stroke="#B8D69F"
-        strokeWidth="8"
-        strokeLinecap="round"
-      />
-
-      <path
-        d="M75 125C86 110 100 109 111 121"
-        stroke="#D6E8C8"
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M416 105C429 91 446 93 456 107"
-        stroke="#D6E8C8"
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
-      <circle cx="92" cy="79" r="5" fill="#A4C98C" />
-      <circle cx="437" cy="68" r="6" fill="#A4C98C" />
+      <g className="evc-sway">
+        <rect x="96" y="216" width="6" height="70" fill="#6b4a2b" />
+        <circle cx="99" cy="202" r="32" fill="#59ae6a" />
+      </g>
+      <g className="evc-sway" style={{ animationDelay: "-1.1s" }}>
+        <rect x="205" y="236" width="5" height="52" fill="#6b4a2b" />
+        <circle cx="207" cy="224" r="24" fill="#4f9d5d" />
+      </g>
+      <g className="evc-sway" style={{ animationDelay: "-2.2s" }}>
+        <rect x="318" y="212" width="6" height="74" fill="#6b4a2b" />
+        <circle cx="321" cy="196" r="30" fill="#59ae6a" />
+      </g>
     </svg>
   );
 }
@@ -167,8 +132,7 @@ export default function CreateEventPage() {
   const [toast, setToast] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
-  // Get today's date after the component mounts.
-  // This prevents Next.js prerendering errors caused by new Date().
+  // Get today's date after mount (prevents Next.js prerender errors)
   useEffect(() => {
     const currentDate = new Date();
 
@@ -194,7 +158,7 @@ export default function CreateEventPage() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [imageFile]);
 
-  // Toast notification
+  // Toast auto-hide
   useEffect(() => {
     if (!toast) return;
 
@@ -309,9 +273,7 @@ export default function CreateEventPage() {
       }
 
       if (today && form.registrationDeadline < today) {
-        newErrors.push(
-          "Registration deadline cannot be in the past."
-        );
+        newErrors.push("Registration deadline cannot be in the past.");
       }
     }
 
@@ -334,9 +296,7 @@ export default function CreateEventPage() {
   };
 
   const handleDraft = () => {
-    setToast(
-      "Draft preview only. Connect the backend to save your event."
-    );
+    setToast("Draft preview only. Connect the backend to save your event.");
   };
 
   const handlePublish = (event: React.FormEvent<HTMLFormElement>) => {
@@ -386,569 +346,668 @@ export default function CreateEventPage() {
       })
     : "Event date";
 
+  const displayTime =
+    form.startTime && form.endTime
+      ? `${form.startTime} – ${form.endTime}`
+      : form.startTime || "Set a time";
+
+  const stepsDone = [
+    Boolean(form.title && form.description),
+    Boolean(
+      form.date &&
+        form.startTime &&
+        form.endTime &&
+        form.location &&
+        form.address
+    ),
+    Boolean(form.maxParticipants),
+  ];
+
   return (
-    <main className="evc">
-      <div className="evc-container">
-        {/* Hero */}
-        <section className="evc-hero">
-          <div className="evc-hero-content">
-            <span className="evc-eyebrow">
-              <span className="evc-eyebrow-dot" />
-              MAKE A DIFFERENCE
-            </span>
+    <MotionConfig reducedMotion="user">
+      <main className="evc">
+        <div className="evc-wrap">
+          {/* Breadcrumb */}
+          <nav className="evc-crumb" aria-label="Breadcrumb">
+            <Link href="/">Home</Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/events">Events</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Create event</span>
+          </nav>
 
-            <h1 className="evc-hero-title">
-              Create a new
-              <br />
-              <span>event.</span>
-            </h1>
+          {/* HERO */}
+          <section className="evc-hero">
+            <div className="evc-hero-l">
+              <motion.div className="evc-chips" {...rise(0)}>
+                <span className="evc-chip">
+                  {form.category || "Event category"}
+                </span>
+                <span className="evc-chip evc-chip--gold">Draft</span>
+              </motion.div>
 
-            <p className="evc-hero-description">
-              Every meaningful change begins with a small idea.
-              Bring people together, plant trees, and create a
-              greener future for your community.
-            </p>
+              <motion.h1 className="evc-title evc-display" {...rise(1)}>
+                {form.title.trim() || "Create a new event"}
+              </motion.h1>
 
-            <div className="evc-tip">
-              <span className="evc-tip-icon">✦</span>
-              <div>
-                <strong>A little tip</strong>
-                <p>
-                  Give your event a clear purpose. People are more
-                  likely to join when they understand the impact.
-                </p>
-              </div>
-            </div>
+              <motion.p className="evc-lead" {...rise(2)}>
+                Every meaningful change begins with a small idea. Bring
+                people together, plant trees, and create a greener future
+                for your community.
+              </motion.p>
 
-            <a href="#event-form" className="evc-hero-button">
-              Start filling the form
-              <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-
-          <div className="evc-hero-art">
-            <div className="evc-art-circle" />
-            <TreeIllustration />
-
-            <div className="evc-art-note">
-              <span>🌱</span>
-              <div>
-                <strong>Grow something good.</strong>
-                <small>One event at a time.</small>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Form and sidebar */}
-        <section className="evc-layout" id="event-form">
-          <div className="evc-form-column">
-            <div className="evc-section-heading">
-              <span className="evc-section-number">01</span>
-              <div>
-                <h2>Event information</h2>
-                <p>Tell your community what you are planning.</p>
-              </div>
-            </div>
-
-            {errors.length > 0 && (
-              <div className="evc-error-box" role="alert">
-                <strong>Please check the following:</strong>
-                <ul>
-                  {errors.map((error) => (
-                    <li key={error}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <form onSubmit={handlePublish} noValidate>
-              {/* Basic information */}
-              <section className="evc-card">
-                <div className="evc-card-heading">
-                  <span className="evc-card-icon">✳</span>
+              <motion.ul className="evc-meta" {...rise(3)}>
+                <li>
+                  <span className="evc-ic">
+                    <CalendarDays size={16} />
+                  </span>
                   <div>
-                    <h3>Basic information</h3>
-                    <p>Start with the essentials of your event.</p>
+                    <small>Date</small>
+                    <b>{displayDate}</b>
                   </div>
-                </div>
+                </li>
 
-                <div className="evc-field">
-                  <label htmlFor="evc-title">
-                    Event title <span>*</span>
-                  </label>
+                <li>
+                  <span className="evc-ic">
+                    <Clock size={16} />
+                  </span>
+                  <div>
+                    <small>Time</small>
+                    <b>{displayTime}</b>
+                  </div>
+                </li>
 
-                  <input
-                    id="evc-title"
-                    type="text"
-                    placeholder="e.g. Green Dhaka: Community Tree Plantation"
-                    value={form.title}
-                    onChange={(e) => updateForm("title", e.target.value)}
-                    maxLength={100}
-                  />
+                <li>
+                  <span className="evc-ic">
+                    <MapPin size={16} />
+                  </span>
+                  <div>
+                    <small>Location</small>
+                    <b>{form.location || "Add a location"}</b>
+                  </div>
+                </li>
 
-                  <small>Keep it clear and easy to remember.</small>
-                </div>
+                <li>
+                  <span className="evc-ic">
+                    <User size={16} />
+                  </span>
+                  <div>
+                    <small>Organizer</small>
+                    <b>You</b>
+                  </div>
+                </li>
+              </motion.ul>
 
-                <div className="evc-field">
-                  <label>
-                    Event category <span>*</span>
-                  </label>
-
-                  <div className="evc-category-grid">
-                    {CATEGORIES.map((category, index) => (
-                      <label
-                        className={`evc-category-option ${
-                          form.category === category ? "is-selected" : ""
-                        }`}
-                        key={category}
+              <motion.div {...rise(4)}>
+                <div className="evc-capline">
+                  <span className="evc-going" aria-live="polite">
+                    <Users size={16} />
+                    <span>
+                      <motion.b
+                        key={completedFields}
+                        initial={{ scale: 1.35 }}
+                        animate={{ scale: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 18,
+                        }}
                       >
-                        <input
-                          type="radio"
-                          name="category"
-                          value={category}
-                          checked={form.category === category}
-                          onChange={() =>
-                            updateForm("category", category)
-                          }
-                        />
+                        {completedFields}
+                      </motion.b>{" "}
+                      of {progressFields.length} details filled
+                    </span>
+                  </span>
 
-                        <span className="evc-category-symbol">
-                          {["🌳", "🌿", "🏫", "🌱"][index]}
-                        </span>
+                  <span>{progress}%</span>
+                </div>
 
-                        <span>{category}</span>
-                      </label>
+                <div
+                  className="evc-bar"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progress}
+                >
+                  <motion.i
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  />
+                </div>
+
+                <a href="#event-form" className="evc-gold-btn evc-hero-btn">
+                  Start filling the form
+                  <ArrowDown size={16} />
+                </a>
+              </motion.div>
+            </div>
+
+            <motion.div
+              className="evc-art"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Landscape />
+
+              <div className="evc-art-note">
+                <span>
+                  <Leaf size={16} />
+                </span>
+                <div>
+                  <b>Grow something good.</b>
+                  <small>One event at a time.</small>
+                </div>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* BODY */}
+          <div className="evc-cols" id="event-form">
+            <div className="evc-main">
+              {errors.length > 0 && (
+                <motion.div
+                  className="evc-error-box"
+                  role="alert"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <strong>Please check the following:</strong>
+                  <ul>
+                    {errors.map((error) => (
+                      <li key={error}>{error}</li>
                     ))}
-                  </div>
-                </div>
+                  </ul>
+                </motion.div>
+              )}
 
-                <div className="evc-field">
-                  <label htmlFor="evc-description">
-                    Event description <span>*</span>
-                  </label>
+              <form onSubmit={handlePublish} noValidate>
+                {/* Basic information */}
+                <motion.section className="evc-panel" {...reveal}>
+                  <h2 className="evc-h2 evc-display">Basic information</h2>
+                  <p className="evc-sub">
+                    Start with the essentials of your event.
+                  </p>
 
-                  <textarea
-                    id="evc-description"
-                    rows={5}
-                    placeholder="Describe your event, its purpose, activities and the impact you hope to make..."
-                    value={form.description}
-                    onChange={(e) =>
-                      updateForm("description", e.target.value)
-                    }
-                    maxLength={1500}
-                  />
-
-                  <div className="evc-field-bottom">
-                    <small>Explain why people should join.</small>
-                    <small>{form.description.length}/1500</small>
-                  </div>
-                </div>
-
-                <div className="evc-field">
-                  <label htmlFor="evc-image">Cover image</label>
-
-                  <label className="evc-upload" htmlFor="evc-image">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Event cover preview"
-                        className="evc-upload-preview"
-                      />
-                    ) : (
-                      <>
-                        <span className="evc-upload-icon">↑</span>
-                        <strong>Click to upload an image</strong>
-                        <small>PNG, JPG or WEBP · Maximum 5 MB</small>
-                      </>
-                    )}
-                  </label>
-
-                  <input
-                    id="evc-image"
-                    className="evc-hidden-input"
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={handleImageChange}
-                  />
-
-                  {imageFile && (
-                    <button
-                      type="button"
-                      className="evc-remove-image"
-                      onClick={() => setImageFile(null)}
-                    >
-                      Remove image
-                    </button>
-                  )}
-                </div>
-              </section>
-
-              {/* Date and location */}
-              <section className="evc-card">
-                <div className="evc-card-heading">
-                  <span className="evc-card-icon">◷</span>
-                  <div>
-                    <h3>Date & location</h3>
-                    <p>
-                      Help participants know when and where to meet.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="evc-field">
-                  <label htmlFor="evc-date">
-                    Event date <span>*</span>
-                  </label>
-
-                  <input
-                    id="evc-date"
-                    type="date"
-                    min={today || undefined}
-                    value={form.date}
-                    onChange={(e) => updateForm("date", e.target.value)}
-                  />
-                </div>
-
-                <div className="evc-field-row">
                   <div className="evc-field">
-                    <label htmlFor="evc-start">
-                      Start time <span>*</span>
+                    <label className="evc-label" htmlFor="evc-title">
+                      Event title <span>*</span>
                     </label>
 
                     <input
-                      id="evc-start"
-                      type="time"
-                      value={form.startTime}
-                      onChange={(e) =>
-                        updateForm("startTime", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <div className="evc-field">
-                    <label htmlFor="evc-end">
-                      End time <span>*</span>
-                    </label>
-
-                    <input
-                      id="evc-end"
-                      type="time"
-                      value={form.endTime}
-                      onChange={(e) =>
-                        updateForm("endTime", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="evc-field">
-                  <label htmlFor="evc-location">
-                    Location name <span>*</span>
-                  </label>
-
-                  <input
-                    id="evc-location"
-                    type="text"
-                    placeholder="e.g. Ramna Park"
-                    value={form.location}
-                    onChange={(e) =>
-                      updateForm("location", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="evc-field">
-                  <label htmlFor="evc-address">
-                    Full address <span>*</span>
-                  </label>
-
-                  <textarea
-                    id="evc-address"
-                    rows={2}
-                    placeholder="Enter the complete event address..."
-                    value={form.address}
-                    onChange={(e) =>
-                      updateForm("address", e.target.value)
-                    }
-                  />
-                </div>
-              </section>
-
-              {/* Participants */}
-              <section className="evc-card">
-                <div className="evc-card-heading">
-                  <span className="evc-card-icon">♧</span>
-                  <div>
-                    <h3>Participants & registration</h3>
-                    <p>
-                      Set the participation details for your event.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="evc-field-row">
-                  <div className="evc-field">
-                    <label htmlFor="evc-max">
-                      Maximum participants <span>*</span>
-                    </label>
-
-                    <input
-                      id="evc-max"
-                      type="number"
-                      min="1"
-                      placeholder="e.g. 50"
-                      value={form.maxParticipants}
-                      onChange={(e) =>
-                        updateForm("maxParticipants", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <div className="evc-field">
-                    <label htmlFor="evc-deadline">
-                      Registration deadline
-                    </label>
-
-                    <input
-                      id="evc-deadline"
-                      type="date"
-                      min={today || undefined}
-                      max={form.date || undefined}
-                      value={form.registrationDeadline}
-                      onChange={(e) =>
-                        updateForm(
-                          "registrationDeadline",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="evc-field">
-                  <label htmlFor="evc-items">Required items</label>
-
-                  <div className="evc-tag-input">
-                    <input
-                      id="evc-items"
+                      id="evc-title"
+                      className="evc-input"
                       type="text"
-                      placeholder="e.g. Gardening gloves, Water bottle"
-                      value={itemInput}
-                      onChange={(e) => setItemInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === ",") {
-                          e.preventDefault();
-                          addRequiredItem();
-                        }
-                      }}
+                      placeholder="e.g. Green Dhaka: Community Tree Plantation"
+                      value={form.title}
+                      onChange={(e) => updateForm("title", e.target.value)}
+                      maxLength={100}
                     />
 
-                    <button type="button" onClick={addRequiredItem}>
-                      Add
-                    </button>
+                    <small className="evc-hint">
+                      Keep it clear and easy to remember.
+                    </small>
                   </div>
 
-                  {requiredItems.length > 0 && (
-                    <div className="evc-tags">
-                      {requiredItems.map((item) => (
-                        <span className="evc-tag" key={item}>
-                          {item}
+                  <div className="evc-field">
+                    <span className="evc-label">
+                      Event category <span>*</span>
+                    </span>
 
-                          <button
-                            type="button"
-                            aria-label={`Remove ${item}`}
-                            onClick={() => removeRequiredItem(item)}
-                          >
-                            ×
-                          </button>
-                        </span>
+                    <div className="evc-category-grid" role="radiogroup">
+                      {CATEGORIES.map((category, index) => (
+                        <label
+                          className={`evc-category-option ${
+                            form.category === category ? "is-selected" : ""
+                          }`}
+                          key={category}
+                        >
+                          <input
+                            type="radio"
+                            name="category"
+                            value={category}
+                            checked={form.category === category}
+                            onChange={() => updateForm("category", category)}
+                          />
+
+                          <span className="evc-category-symbol">
+                            {CATEGORY_ICONS[index]}
+                          </span>
+
+                          <span>{category}</span>
+                        </label>
                       ))}
                     </div>
-                  )}
-
-                  <small>
-                    Press Enter or click Add to add an item.
-                  </small>
-                </div>
-
-                <div className="evc-field">
-                  <label>Participation fee</label>
-
-                  <div className="evc-fee-options">
-                    <button
-                      type="button"
-                      className={
-                        form.feeType === "free" ? "is-selected" : ""
-                      }
-                      onClick={() => updateForm("feeType", "free")}
-                    >
-                      <span>Free</span>
-                      <small>No participation fee</small>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        form.feeType === "paid" ? "is-selected" : ""
-                      }
-                      onClick={() => updateForm("feeType", "paid")}
-                    >
-                      <span>Paid</span>
-                      <small>Set an amount</small>
-                    </button>
                   </div>
 
-                  {form.feeType === "paid" && (
-                    <div className="evc-fee-amount">
-                      <label htmlFor="evc-fee">
-                        Fee amount (BDT)
+                  <div className="evc-field">
+                    <label className="evc-label" htmlFor="evc-description">
+                      Event description <span>*</span>
+                    </label>
+
+                    <textarea
+                      id="evc-description"
+                      className="evc-input"
+                      rows={5}
+                      placeholder="Describe your event, its purpose, activities and the impact you hope to make..."
+                      value={form.description}
+                      onChange={(e) =>
+                        updateForm("description", e.target.value)
+                      }
+                      maxLength={1500}
+                    />
+
+                    <div className="evc-field-bottom">
+                      <small className="evc-hint">
+                        Explain why people should join.
+                      </small>
+                      <small className="evc-hint">
+                        {form.description.length}/1500
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="evc-field">
+                    <span className="evc-label">Cover image</span>
+
+                    <label className="evc-upload" htmlFor="evc-image">
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Event cover preview"
+                          className="evc-upload-preview"
+                        />
+                      ) : (
+                        <>
+                          <span className="evc-upload-icon">
+                            <ImagePlus size={20} />
+                          </span>
+                          <strong>Click to upload an image</strong>
+                          <small>PNG, JPG or WEBP · Maximum 5 MB</small>
+                        </>
+                      )}
+                    </label>
+
+                    <input
+                      id="evc-image"
+                      className="evc-hidden-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleImageChange}
+                    />
+
+                    {imageFile && (
+                      <button
+                        type="button"
+                        className="evc-remove-image"
+                        onClick={() => setImageFile(null)}
+                      >
+                        Remove image
+                      </button>
+                    )}
+                  </div>
+                </motion.section>
+
+                {/* Date and location */}
+                <motion.section className="evc-panel" {...reveal}>
+                  <h2 className="evc-h2 evc-display">Date &amp; location</h2>
+                  <p className="evc-sub">
+                    Help participants know when and where to meet.
+                  </p>
+
+                  <div className="evc-field">
+                    <label className="evc-label" htmlFor="evc-date">
+                      Event date <span>*</span>
+                    </label>
+
+                    <input
+                      id="evc-date"
+                      className="evc-input"
+                      type="date"
+                      min={today || undefined}
+                      value={form.date}
+                      onChange={(e) => updateForm("date", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="evc-field-row">
+                    <div className="evc-field">
+                      <label className="evc-label" htmlFor="evc-start">
+                        Start time <span>*</span>
                       </label>
 
                       <input
-                        id="evc-fee"
-                        type="number"
-                        min="1"
-                        placeholder="e.g. 100"
-                        value={form.feeAmount}
+                        id="evc-start"
+                        className="evc-input"
+                        type="time"
+                        value={form.startTime}
                         onChange={(e) =>
-                          updateForm("feeAmount", e.target.value)
+                          updateForm("startTime", e.target.value)
                         }
                       />
                     </div>
+
+                    <div className="evc-field">
+                      <label className="evc-label" htmlFor="evc-end">
+                        End time <span>*</span>
+                      </label>
+
+                      <input
+                        id="evc-end"
+                        className="evc-input"
+                        type="time"
+                        value={form.endTime}
+                        onChange={(e) => updateForm("endTime", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="evc-field">
+                    <label className="evc-label" htmlFor="evc-location">
+                      Location name <span>*</span>
+                    </label>
+
+                    <input
+                      id="evc-location"
+                      className="evc-input"
+                      type="text"
+                      placeholder="e.g. Ramna Park"
+                      value={form.location}
+                      onChange={(e) => updateForm("location", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="evc-field">
+                    <label className="evc-label" htmlFor="evc-address">
+                      Full address <span>*</span>
+                    </label>
+
+                    <textarea
+                      id="evc-address"
+                      className="evc-input"
+                      rows={2}
+                      placeholder="Enter the complete event address..."
+                      value={form.address}
+                      onChange={(e) => updateForm("address", e.target.value)}
+                    />
+                  </div>
+                </motion.section>
+
+                {/* Participants */}
+                <motion.section className="evc-panel" {...reveal}>
+                  <h2 className="evc-h2 evc-display">
+                    Participants &amp; registration
+                  </h2>
+                  <p className="evc-sub">
+                    Set the participation details for your event.
+                  </p>
+
+                  <div className="evc-field-row">
+                    <div className="evc-field">
+                      <label className="evc-label" htmlFor="evc-max">
+                        Maximum participants <span>*</span>
+                      </label>
+
+                      <input
+                        id="evc-max"
+                        className="evc-input"
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 50"
+                        value={form.maxParticipants}
+                        onChange={(e) =>
+                          updateForm("maxParticipants", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="evc-field">
+                      <label className="evc-label" htmlFor="evc-deadline">
+                        Registration deadline
+                      </label>
+
+                      <input
+                        id="evc-deadline"
+                        className="evc-input"
+                        type="date"
+                        min={today || undefined}
+                        max={form.date || undefined}
+                        value={form.registrationDeadline}
+                        onChange={(e) =>
+                          updateForm("registrationDeadline", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="evc-field">
+                    <label className="evc-label" htmlFor="evc-items">
+                      Required items
+                    </label>
+
+                    <div className="evc-tag-input">
+                      <input
+                        id="evc-items"
+                        className="evc-input"
+                        type="text"
+                        placeholder="e.g. Gardening gloves, Water bottle"
+                        value={itemInput}
+                        onChange={(e) => setItemInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === ",") {
+                            e.preventDefault();
+                            addRequiredItem();
+                          }
+                        }}
+                      />
+
+                      <button type="button" onClick={addRequiredItem}>
+                        <Plus size={15} />
+                        Add
+                      </button>
+                    </div>
+
+                    {requiredItems.length > 0 && (
+                      <div className="evc-tags">
+                        {requiredItems.map((item) => (
+                          <span className="evc-tag" key={item}>
+                            {item}
+
+                            <button
+                              type="button"
+                              aria-label={`Remove ${item}`}
+                              onClick={() => removeRequiredItem(item)}
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <small className="evc-hint">
+                      Press Enter or click Add to add an item.
+                    </small>
+                  </div>
+
+                  <div className="evc-field">
+                    <span className="evc-label">Participation fee</span>
+
+                    <div className="evc-fee-options">
+                      <button
+                        type="button"
+                        className={form.feeType === "free" ? "is-selected" : ""}
+                        onClick={() => updateForm("feeType", "free")}
+                      >
+                        <span>Free</span>
+                        <small>No participation fee</small>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={form.feeType === "paid" ? "is-selected" : ""}
+                        onClick={() => updateForm("feeType", "paid")}
+                      >
+                        <span>Paid</span>
+                        <small>Set an amount</small>
+                      </button>
+                    </div>
+
+                    {form.feeType === "paid" && (
+                      <div className="evc-fee-amount">
+                        <label className="evc-label" htmlFor="evc-fee">
+                          Fee amount (BDT)
+                        </label>
+
+                        <input
+                          id="evc-fee"
+                          className="evc-input"
+                          type="number"
+                          min="1"
+                          placeholder="e.g. 100"
+                          value={form.feeAmount}
+                          onChange={(e) =>
+                            updateForm("feeAmount", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                </motion.section>
+
+                {/* Organizer */}
+                <motion.section className="evc-panel" {...reveal}>
+                  <h2 className="evc-h2 evc-display">Organizer information</h2>
+                  <p className="evc-sub">
+                    Your account will be associated with this event.
+                  </p>
+
+                  <div className="evc-org">
+                    <span className="evc-avatar" aria-hidden="true">
+                      U
+                    </span>
+
+                    <div>
+                      <b>Your account</b>
+                      <small>Signed-in organizer</small>
+                    </div>
+
+                    <span className="evc-chip evc-chip--gold">Account</span>
+                  </div>
+
+                  <p className="evc-org-note">
+                    Organizer details will be connected to your logged-in
+                    account when authentication is integrated.
+                  </p>
+                </motion.section>
+
+                {/* Actions */}
+                <div className="evc-actions">
+                  <button
+                    type="button"
+                    className="evc-draft-btn"
+                    onClick={handleDraft}
+                  >
+                    Save as Draft
+                  </button>
+
+                  <button type="submit" className="evc-gold-btn">
+                    Publish Event
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="evc-side">
+              <motion.section
+                className="evc-panel evc-preview"
+                {...reveal}
+              >
+                <h2 className="evc-h2 evc-display evc-live">
+                  <span className="evc-live-dot" />
+                  Live preview
+                </h2>
+                <p className="evc-sub">
+                  This is how your event will appear to the community.
+                </p>
+
+                <div className="evc-preview-image">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Event preview" />
+                  ) : (
+                    <div className="evc-preview-placeholder">
+                      <Leaf size={30} />
+                      <small>Your event cover image</small>
+                    </div>
                   )}
                 </div>
-              </section>
 
-              {/* Organizer */}
-              <section className="evc-card">
-                <div className="evc-card-heading">
-                  <span className="evc-card-icon">♙</span>
-                  <div>
-                    <h3>Organizer information</h3>
-                    <p>
-                      Your account will be associated with this event.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="evc-organizer">
-                  <div className="evc-organizer-avatar">U</div>
-
-                  <div>
-                    <strong>Your account</strong>
-                    <small>Signed-in organizer</small>
-                  </div>
-
-                  <span className="evc-organizer-status">Account</span>
-                </div>
-
-                <p className="evc-organizer-note">
-                  Organizer details will be connected to your logged-in
-                  account when authentication is integrated.
-                </p>
-              </section>
-
-              {/* Actions */}
-              <div className="evc-form-actions">
-                <button
-                  type="button"
-                  className="evc-draft-button"
-                  onClick={handleDraft}
-                >
-                  Save as Draft
-                </button>
-
-                <button type="submit" className="evc-publish-button">
-                  Publish Event <span>→</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Live preview sidebar */}
-          <aside className="evc-sidebar">
-            <div className="evc-preview-card">
-              <div className="evc-sidebar-heading">
-                <span className="evc-live-dot" />
-                <h3>Live preview</h3>
-              </div>
-
-              <p className="evc-sidebar-description">
-                This is how your event will appear to the community.
-              </p>
-
-              <div className="evc-preview-image">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Event preview" />
-                ) : (
-                  <div className="evc-preview-placeholder">
-                    <span>🌳</span>
-                    <small>Your event cover image</small>
-                  </div>
-                )}
-              </div>
-
-              <div className="evc-preview-content">
-                <span className="evc-preview-category">
+                <span className="evc-chip evc-preview-chip">
                   {form.category || "Event category"}
                 </span>
 
-                <h4>{form.title || "Your event title goes here"}</h4>
+                <h3 className="evc-preview-title evc-display">
+                  {form.title || "Your event title goes here"}
+                </h3>
 
-                <p className="evc-preview-description">
+                <p className="evc-preview-desc">
                   {form.description ||
                     "Your event description will appear here as you fill out the form."}
                 </p>
 
-                <div className="evc-preview-meta">
-                  <div>
-                    <span>◷</span>
-                    <p>
-                      <small>Date & time</small>
-                      <strong>
+                <ul className="evc-preview-meta">
+                  <li>
+                    <span className="evc-ic">
+                      <CalendarDays size={15} />
+                    </span>
+                    <div>
+                      <small>Date &amp; time</small>
+                      <b>
                         {displayDate}
                         {form.startTime ? ` · ${form.startTime}` : ""}
-                      </strong>
-                    </p>
-                  </div>
+                      </b>
+                    </div>
+                  </li>
 
-                  <div>
-                    <span>⌖</span>
-                    <p>
+                  <li>
+                    <span className="evc-ic">
+                      <MapPin size={15} />
+                    </span>
+                    <div>
                       <small>Location</small>
-                      <strong>
-                        {form.location || "Event location"}
-                      </strong>
-                    </p>
-                  </div>
+                      <b>{form.location || "Event location"}</b>
+                    </div>
+                  </li>
 
-                  <div>
-                    <span>♧</span>
-                    <p>
+                  <li>
+                    <span className="evc-ic">
+                      <Users size={15} />
+                    </span>
+                    <div>
                       <small>Participants</small>
-                      <strong>
-                        {form.maxParticipants || "Not set"}
-                      </strong>
-                    </p>
-                  </div>
+                      <b>{form.maxParticipants || "Not set"}</b>
+                    </div>
+                  </li>
 
-                  <div>
-                    <span>৳</span>
-                    <p>
+                  <li>
+                    <span className="evc-ic evc-ic--text">৳</span>
+                    <div>
                       <small>Participation</small>
-                      <strong>
+                      <b>
                         {form.feeType === "free"
                           ? "Free"
                           : `BDT ${form.feeAmount || "Not set"}`}
-                      </strong>
-                    </p>
-                  </div>
-                </div>
+                      </b>
+                    </div>
+                  </li>
+                </ul>
 
                 {requiredItems.length > 0 && (
                   <div className="evc-preview-items">
-                    <strong>What to bring</strong>
+                    <b>What to bring</b>
 
                     <div>
                       {requiredItems.map((item) => (
@@ -957,153 +1016,128 @@ export default function CreateEventPage() {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
+              </motion.section>
 
-            <div className="evc-progress-card">
-              <div className="evc-progress-heading">
+              <motion.section className="evc-panel" {...reveal}>
+                <h2 className="evc-h2 evc-display">Ready to publish?</h2>
+                <p className="evc-sub">
+                  Complete these sections to get started.
+                </p>
+
+                <div className="evc-steps">
+                  {["Basic information", "Date & location", "Participants"].map(
+                    (step, index) => (
+                      <div key={step}>
+                        <span className={stepsDone[index] ? "is-complete" : ""}>
+                          {stepsDone[index] ? <Check size={13} /> : index + 1}
+                        </span>
+                        <p>{step}</p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </motion.section>
+
+              <motion.section className="evc-panel evc-tip" {...reveal}>
+                <span className="evc-ic">
+                  <Sparkles size={16} />
+                </span>
                 <div>
-                  <h3>Ready to publish?</h3>
+                  <b>A little tip</b>
                   <p>
-                    Complete the event details to get started.
+                    Give your event a clear purpose. People are more likely to
+                    join when they understand the impact.
                   </p>
                 </div>
-
-                <strong>{progress}%</strong>
-              </div>
-
-              <div className="evc-progress-track">
-                <span style={{ width: `${progress}%` }} />
-              </div>
-
-              <div className="evc-progress-steps">
-                {[
-                  "Basic information",
-                  "Date & location",
-                  "Participants",
-                ].map((step, index) => {
-                  const isComplete = [
-                    Boolean(form.title && form.description),
-                    Boolean(
-                      form.date &&
-                        form.startTime &&
-                        form.endTime &&
-                        form.location &&
-                        form.address
-                    ),
-                    Boolean(form.maxParticipants),
-                  ][index];
-
-                  return (
-                    <div key={step}>
-                      <span className={isComplete ? "is-complete" : ""}>
-                        {isComplete ? "✓" : index + 1}
-                      </span>
-
-                      <p>{step}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="evc-sidebar-tip">
-              <span>🌱</span>
-
-              <div>
-                <strong>Every tree counts.</strong>
-                <p>
-                  Your initiative can inspire an entire community
-                  to take action.
-                </p>
-              </div>
-            </div>
-          </aside>
-        </section>
-
-        {/* Bottom CTA */}
-        <section className="evc-bottom-cta">
-          <div>
-            <span>ROOTED IN CHANGE</span>
-            <h2>Small actions. Greener tomorrows.</h2>
-            <p>
-              Bring your community together and make every
-              plantation effort count.
-            </p>
+              </motion.section>
+            </aside>
           </div>
 
-          <Link href="/events" className="evc-cta-link">
-            Explore events <span>→</span>
-          </Link>
-        </section>
-      </div>
+          {/* BOTTOM CTA */}
+          <section className="evc-cta">
+            <div>
+              <h2 className="evc-display">Small actions. Greener tomorrows.</h2>
+              <p>
+                Bring your community together and make every plantation effort
+                count.
+              </p>
+            </div>
 
-      {/* Publish modal */}
-      {modalOpen && (
-        <div
-          className="evc-modal-backdrop"
-          role="presentation"
-          onClick={() => setModalOpen(false)}
-        >
+            <Link href="/events" className="evc-cta-btn">
+              Explore events
+              <ArrowRight size={16} />
+            </Link>
+          </section>
+        </div>
+
+        {/* Publish modal */}
+        {modalOpen && (
           <div
-            className="evc-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="evc-modal-title"
-            onClick={(e) => e.stopPropagation()}
+            className="evc-modal-backdrop"
+            role="presentation"
+            onClick={() => setModalOpen(false)}
           >
-            <div className="evc-modal-icon">✓</div>
+            <div
+              className="evc-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="evc-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="evc-modal-icon">
+                <Check size={26} />
+              </div>
 
-            <span className="evc-modal-status">PENDING</span>
+              <span className="evc-chip evc-chip--gold">PENDING</span>
 
-            <h2 id="evc-modal-title">Your event is ready!</h2>
+              <h2 id="evc-modal-title" className="evc-display">
+                Your event is ready!
+              </h2>
 
-            <p>
-              Your event details passed the form validation.
-              Backend submission and admin review will be available
-              after API integration.
-            </p>
+              <p>
+                Your event details passed the form validation. Backend
+                submission and admin review will be available after API
+                integration.
+              </p>
 
-            <div className="evc-modal-event">
-              <strong>{form.title}</strong>
-              <small>{displayDate}</small>
-            </div>
+              <div className="evc-modal-event">
+                <strong>{form.title}</strong>
+                <small>{displayDate}</small>
+              </div>
 
-            <div className="evc-modal-actions">
-              <Link
-                href="/my-events"
-                className="evc-modal-primary"
-              >
-                My Events
-              </Link>
+              <div className="evc-modal-actions">
+                <Link href="/my-events" className="evc-modal-primary">
+                  My Events
+                </Link>
 
-              <button
-                type="button"
-                className="evc-modal-secondary"
-                onClick={resetForm}
-              >
-                Create another event
-              </button>
+                <button
+                  type="button"
+                  className="evc-modal-secondary"
+                  onClick={resetForm}
+                >
+                  Create another event
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Toast */}
-      {toast && (
-        <div className="evc-toast" role="status">
-          <span>ℹ</span>
-          {toast}
+        {/* Toast */}
+        {toast && (
+          <div className="evc-toast" role="status">
+            <Info size={16} />
+            {toast}
 
-          <button
-            type="button"
-            aria-label="Dismiss notification"
-            onClick={() => setToast("")}
-          >
-            ×
-          </button>
-        </div>
-      )}
-    </main>
+            <button
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={() => setToast("")}
+            >
+              <X size={13} />
+            </button>
+          </div>
+        )}
+      </main>
+    </MotionConfig>
   );
-}
+} update kore pura code dao

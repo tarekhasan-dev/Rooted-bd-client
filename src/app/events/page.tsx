@@ -1,3 +1,4 @@
+
 "use client";
 
 import "@/styles/events.css";
@@ -32,11 +33,9 @@ interface Event {
   creatorEmail: string;
 }
 
-// Change these two if your routes are different.
 const CREATE_EVENT_HREF = "/create-event";
 const JOIN_HREF = "/signup";
 
-// Internal value for the "All Events" chip (the visible label is translated).
 const ALL = "__all__";
 
 function Illustration() {
@@ -82,6 +81,11 @@ export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(ALL);
 
+  // Track images that fail to load.
+  const [failedImages, setFailedImages] = useState<Set<string>>(
+    () => new Set()
+  );
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
 
@@ -96,7 +100,7 @@ export default function EventsPage() {
     });
   };
 
-  // Fetch upcoming events from backend
+  // Fetch upcoming events from backend.
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
@@ -104,9 +108,31 @@ export default function EventsPage() {
 
       const response = await api("/events");
 
-      setEvents(Array.isArray(response.events) ? response.events : []);
+      // Debug: inspect the complete API response.
+      console.log("EVENT API RESPONSE:", response);
+
+      const eventList = Array.isArray(response?.events)
+        ? response.events
+        : [];
+
+      // Debug: inspect each event's image URL.
+      console.log(
+        "EVENT THUMBNAILS:",
+        eventList.map((event: Event) => ({
+          id: event._id,
+          title: event.title,
+          thumbnail: event.thumbnail,
+        }))
+      );
+
+      setEvents(eventList);
+      setFailedImages(new Set());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "");
+      console.error("EVENT FETCH ERROR:", err);
+
+      setError(
+        err instanceof Error ? err.message : "Unable to load events."
+      );
     } finally {
       setLoading(false);
     }
@@ -116,7 +142,7 @@ export default function EventsPage() {
     void fetchEvents();
   }, [fetchEvents]);
 
-  // Categories come from the database
+  // Categories come from the database.
   const categories = useMemo(() => {
     const categoryMap = new Map<string, string>();
 
@@ -125,7 +151,10 @@ export default function EventsPage() {
       if (!category) return;
 
       const key = category.toLowerCase();
-      if (!categoryMap.has(key)) categoryMap.set(key, category);
+
+      if (!categoryMap.has(key)) {
+        categoryMap.set(key, category);
+      }
     });
 
     const dynamic = Array.from(categoryMap.values()).sort((a, b) =>
@@ -135,14 +164,14 @@ export default function EventsPage() {
     return [ALL, ...dynamic];
   }, [events]);
 
-  // Reset category if it no longer exists
+  // Reset category if it no longer exists.
   useEffect(() => {
     if (!categories.includes(activeCategory)) {
       setActiveCategory(ALL);
     }
   }, [categories, activeCategory]);
 
-  // Search + category filtering
+  // Search + category filtering.
   const filteredEvents = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
 
@@ -173,22 +202,45 @@ export default function EventsPage() {
     setActiveCategory(ALL);
   };
 
-  const hasActiveFilters = searchTerm.trim() !== "" || activeCategory !== ALL;
+  const hasActiveFilters =
+    searchTerm.trim() !== "" || activeCategory !== ALL;
 
   const countText = t("evp_count")
     .replace("{shown}", String(filteredEvents.length))
     .replace("{total}", String(events.length));
 
+  // Handle image loading errors.
+  const handleImageError = (eventId: string, imageUrl: string) => {
+    console.error("EVENT IMAGE FAILED:", {
+      eventId,
+      imageUrl,
+    });
+
+    setFailedImages((previous) => {
+      const updated = new Set(previous);
+      updated.add(eventId);
+      return updated;
+    });
+  };
+
+  const handleImageLoad = (eventId: string, imageUrl: string) => {
+    console.log("EVENT IMAGE LOADED:", {
+      eventId,
+      imageUrl,
+    });
+  };
+
   return (
     <main className="ev-page">
       <div className="ev-wrap">
-        {/* HERO: split card, same layout as the login page */}
+        {/* HERO */}
         <section className="ev-hero">
           <div className="ev-hero-left">
             <div className="ev-logo-row">
               <span className="ev-logo-icon">
                 <Leaf size={20} />
               </span>
+
               <span className="ev-display ev-logo-text">
                 rooted<span className="ev-logo-dot">.</span>
                 <small>BD</small>
@@ -203,6 +255,7 @@ export default function EventsPage() {
                 <CalendarDays size={16} />
                 {t("evp_perk_1")}
               </li>
+
               <li>
                 <Users size={16} />
                 {t("evp_perk_2")}
@@ -278,7 +331,10 @@ export default function EventsPage() {
         <section className="ev-results" aria-live="polite">
           <div className="ev-results-head">
             <div>
-              <h2 className="ev-display ev-h2">{t("evp_section_title")}</h2>
+              <h2 className="ev-display ev-h2">
+                {t("evp_section_title")}
+              </h2>
+
               <p className="ev-sub">{t("evp_section_text")}</p>
             </div>
 
@@ -312,8 +368,10 @@ export default function EventsPage() {
               <span className="ev-empty-icon">
                 <RefreshCw size={26} />
               </span>
+
               <h3>{t("evp_error_title")}</h3>
               <p>{error || t("evp_load_failed")}</p>
+
               <button
                 type="button"
                 className="ev-btn ev-btn-wide"
@@ -368,58 +426,87 @@ export default function EventsPage() {
           {/* EVENT CARDS */}
           {!loading && error === "" && filteredEvents.length > 0 && (
             <div className="ev-grid">
-              {filteredEvents.map((event, index) => (
-                <motion.article
-                  key={event._id}
-                  className="ev-card"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05 }}
-                >
-                  <div
-                    className="ev-thumb"
-                    role={event.thumbnail ? "img" : undefined}
-                    aria-label={event.thumbnail ? event.title : undefined}
-                    style={
-                      event.thumbnail
-                        ? { backgroundImage: `url("${event.thumbnail}")` }
-                        : undefined
-                    }
+              {filteredEvents.map((event, index) => {
+                const imageUrl =
+                  typeof event.thumbnail === "string"
+                    ? event.thumbnail.trim()
+                    : "";
+
+                const showImage =
+                  imageUrl !== "" && !failedImages.has(event._id);
+
+                return (
+                  <motion.article
+                    key={event._id}
+                    className="ev-card"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: Math.min(index, 8) * 0.05,
+                    }}
                   >
-                    {!event.thumbnail && <Sprout size={54} />}
-                  </div>
+                    <div className="ev-thumb">
+                      {showImage ? (
+                        <img
+                          src={imageUrl}
+                          alt={event.title}
+                          loading="lazy"
+                          onLoad={() =>
+                            handleImageLoad(event._id, imageUrl)
+                          }
+                          onError={() =>
+                            handleImageError(event._id, imageUrl)
+                          }
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      ) : (
+                        <Sprout size={54} />
+                      )}
+                    </div>
 
-                  <div className="ev-card-body">
-                    <span className="ev-pill">
-                      {event.eventType || t("type_default")}
-                    </span>
+                    <div className="ev-card-body">
+                      <span className="ev-pill">
+                        {event.eventType || t("type_default")}
+                      </span>
 
-                    <h3>{event.title}</h3>
+                      <h3>{event.title}</h3>
 
-                    <p className="ev-desc">{event.description}</p>
+                      <p className="ev-desc">{event.description}</p>
 
-                    <ul className="ev-meta">
-                      <li>
-                        <CalendarDays size={15} />
-                        <span>{formatDate(event.eventDate)}</span>
-                      </li>
-                      <li>
-                        <MapPin size={15} />
-                        <span>{event.location}</span>
-                      </li>
-                    </ul>
+                      <ul className="ev-meta">
+                        <li>
+                          <CalendarDays size={15} />
+                          <span>{formatDate(event.eventDate)}</span>
+                        </li>
 
-                    <p className="ev-by">
-                      {t("evp_organized_by")}
-                      <strong>{event.creatorName || t("evp_member")}</strong>
-                    </p>
+                        <li>
+                          <MapPin size={15} />
+                          <span>{event.location}</span>
+                        </li>
+                      </ul>
 
-                    <Link href={`/events/${event._id}`} className="ev-btn">
-                      {t("view_event")}
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
+                      <p className="ev-by">
+                        {t("evp_organized_by")}
+                        <strong>
+                          {event.creatorName || t("evp_member")}
+                        </strong>
+                      </p>
+
+                      <Link href={`/events/${event._id}`} className="ev-btn">
+                        {t("view_event")}
+                      </Link>
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
           )}
         </section>
