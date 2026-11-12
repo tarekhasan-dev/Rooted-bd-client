@@ -1140,4 +1140,4 @@ export default function CreateEventPage() {
       </main>
     </MotionConfig>
   );
-} update kore pura code dao
+} 
