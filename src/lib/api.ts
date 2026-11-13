@@ -1,7 +1,9 @@
+
 import { authClient } from "./auth-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// API request helper
 export const api = async (
   endpoint: string,
   options: RequestInit = {},
@@ -17,6 +19,7 @@ export const api = async (
     headers.set("Content-Type", "application/json");
   }
 
+  // Attach JWT token when authentication is required
   if (requiresAuth) {
     const { data, error } = await authClient.token();
 
@@ -41,6 +44,7 @@ export const api = async (
   return result;
 };
 
+// Generate and inspect JWT token
 export const getTestToken = async () => {
   const { data, error } = await authClient.token();
 
@@ -48,7 +52,44 @@ export const getTestToken = async () => {
     throw new Error("JWT Token not available!");
   }
 
-  console.log("JWT Token generated successfully!");
+  const token = data.token;
 
-  return data.token;
+  try {
+    const tokenParts = token.split(".");
+
+    if (tokenParts.length !== 3) {
+      throw new Error("Invalid JWT format!");
+    }
+
+    // Decode JWT payload (does not verify signature)
+    const base64 = tokenParts[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const decodedPayload = atob(
+      base64.padEnd(
+        base64.length + ((4 - (base64.length % 4)) % 4),
+        "="
+      )
+    );
+
+    const payload = JSON.parse(decodedPayload);
+
+    console.log("JWT Token generated successfully!");
+
+    console.log("JWT Payload:", {
+      sub: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    });
+
+    // Display role separately
+    console.log("JWT Role:", payload.role);
+
+    return token;
+  } catch (error) {
+    console.error("JWT inspection failed:", error);
+
+    throw new Error("Failed to inspect JWT payload!");
+  }
 };

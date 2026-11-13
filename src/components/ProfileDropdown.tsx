@@ -1,3 +1,4 @@
+
 "use client";
 
 import "@/styles/profile-dropdown.css";
@@ -26,7 +27,11 @@ import { useLang } from "@/components/LanguageProvider";
 import ThemeSwitcher, { type ThemeMode } from "@/components/ThemeSwitcher";
 import type { TKey } from "@/lib/i18n";
 
-export type UserRole = "user" | "organizer" | "admin";
+export type UserRole =
+  | "user"
+  | "organizer"
+  | "admin"
+  | "super_admin";
 
 interface ProfileDropdownProps {
   user: {
@@ -46,26 +51,81 @@ type Item = {
   sub?: TKey;
 };
 
-/* ====== রুট ঠিক করার জায়গা: তোমার আসল পাথ অনুযায়ী href বদলাও ====== */
-
 const ACCOUNT_ITEMS: Item[] = [
-  { href: "/my-profile", Icon: User, tone: "green", label: "dd_profile", sub: "dd_profile_sub" },
-  { href: "/saved-events", Icon: Bookmark, tone: "gold", label: "dd_saved", sub: "dd_saved_sub" },
-  { href: "/my-activity", Icon: Activity, tone: "teal", label: "dd_activity", sub: "dd_activity_sub" },
-  { href: "/settings", Icon: Settings, tone: "slate", label: "dd_settings", sub: "dd_settings_sub" },
+  {
+    href: "/my-profile",
+    Icon: User,
+    tone: "green",
+    label: "dd_profile",
+    sub: "dd_profile_sub",
+  },
+  {
+    href: "/saved-events",
+    Icon: Bookmark,
+    tone: "gold",
+    label: "dd_saved",
+    sub: "dd_saved_sub",
+  },
+  {
+    href: "/my-activity",
+    Icon: Activity,
+    tone: "teal",
+    label: "dd_activity",
+    sub: "dd_activity_sub",
+  },
+  {
+    href: "/settings",
+    Icon: Settings,
+    tone: "slate",
+    label: "dd_settings",
+    sub: "dd_settings_sub",
+  },
 ];
 
-const CREATE_ITEM: Item = { href: "/create-event", Icon: CirclePlus, tone: "green", label: "dd_create" };
-const JOINED_ITEM: Item = { href: "/my-events", Icon: CircleCheck, tone: "teal", label: "dd_joined" };
-const MANAGE_ITEM: Item = { href: "/manage-events", Icon: SlidersHorizontal, tone: "gold", label: "dd_manage" };
-const ADMIN_ITEM: Item = { href: "/admin", Icon: ShieldCheck, tone: "rose", label: "dd_admin" };
+const CREATE_ITEM: Item = {
+  href: "/create-event",
+  Icon: CirclePlus,
+  tone: "green",
+  label: "dd_create",
+};
+
+const JOINED_ITEM: Item = {
+  href: "/my-events",
+  Icon: CircleCheck,
+  tone: "teal",
+  label: "dd_joined",
+};
+
+const MANAGE_ITEM: Item = {
+  href: "/manage-events",
+  Icon: SlidersHorizontal,
+  tone: "gold",
+  label: "dd_manage",
+};
+
+const ADMIN_ITEM: Item = {
+  href: "/admin",
+  Icon: ShieldCheck,
+  tone: "rose",
+  label: "dd_admin",
+};
 
 const HELP_ITEMS: Item[] = [
-  { href: "/documentation", Icon: BookOpen, tone: "blue", label: "dd_docs" },
-  { href: "/support", Icon: LifeBuoy, tone: "green", label: "dd_support" },
+  {
+    href: "/documentation",
+    Icon: BookOpen,
+    tone: "blue",
+    label: "dd_docs",
+  },
+  {
+    href: "/support",
+    Icon: LifeBuoy,
+    tone: "green",
+    label: "dd_support",
+  },
 ];
 
-/* ====== ছোট কম্পোনেন্ট ====== */
+/* Avatar Component */
 
 function Avatar({
   name,
@@ -82,7 +142,11 @@ function Avatar({
     <span className={`rpd-avatar rpd-avatar-${size}`}>
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt={name} referrerPolicy="no-referrer" />
+        <img
+          src={image}
+          alt={name}
+          referrerPolicy="no-referrer"
+        />
       ) : (
         <span>{initial}</span>
       )}
@@ -90,28 +154,55 @@ function Avatar({
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+/* Section Title */
+
+function SectionTitle({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <p className="rpd-section">{children}</p>;
 }
 
-function MenuLink({ item, onClick }: { item: Item; onClick: () => void }) {
+/* Menu Link */
+
+function MenuLink({
+  item,
+  onClick,
+}: {
+  item: Item;
+  onClick: () => void;
+}) {
   const { t } = useLang();
   const { Icon } = item;
 
   return (
-    <Link href={item.href} className="rpd-item" role="menuitem" onClick={onClick}>
+    <Link
+      href={item.href}
+      className="rpd-item"
+      role="menuitem"
+      onClick={onClick}
+    >
       <span className={`rpd-ico tone-${item.tone}`}>
         <Icon size={17} />
       </span>
+
       <span className="rpd-item-text">
-        <span className="rpd-item-title">{t(item.label)}</span>
-        {item.sub && <span className="rpd-item-sub">{t(item.sub)}</span>}
+        <span className="rpd-item-title">
+          {t(item.label)}
+        </span>
+
+        {item.sub && (
+          <span className="rpd-item-sub">
+            {t(item.sub)}
+          </span>
+        )}
       </span>
     </Link>
   );
 }
 
-/* ====== মূল কম্পোনেন্ট ====== */
+/* Main Profile Dropdown */
 
 export default function ProfileDropdown({
   user,
@@ -126,19 +217,33 @@ export default function ProfileDropdown({
 
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // role (কমা দিয়ে একাধিক থাকলেও কাজ করবে)
+  // Normalize role
   const roles = String(role ?? "user")
     .split(",")
-    .map((r) => r.trim());
-  const isAdmin = roles.includes("admin");
+    .map((r) => r.trim().toLowerCase());
+
+  const isSuperAdmin = roles.includes("super_admin");
+  const isAdmin = roles.includes("admin") || isSuperAdmin;
   const isOrganizer = roles.includes("organizer");
+
   const canManage = isAdmin || isOrganizer;
 
-  const roleKey: TKey = isAdmin
-    ? "role_admin"
-    : isOrganizer
-      ? "role_organizer"
-      : "role_user";
+  // Display role
+  const roleLabel = isSuperAdmin
+    ? "Super Admin"
+    : isAdmin
+      ? "Admin"
+      : isOrganizer
+        ? "Organizer"
+        : "Member";
+
+  const roleKey: TKey | null = isSuperAdmin
+    ? null
+    : isAdmin
+      ? "role_admin"
+      : isOrganizer
+        ? "role_organizer"
+        : "role_user";
 
   const eventItems: Item[] = [
     ...(canManage ? [CREATE_ITEM] : []),
@@ -146,31 +251,43 @@ export default function ProfileDropdown({
     ...(canManage ? [MANAGE_ITEM] : []),
   ];
 
-  // সেভ করা থিম পড়া
+  // Load saved theme
   useEffect(() => {
     try {
       const saved = localStorage.getItem("rooted-theme");
-      if (saved === "light" || saved === "dark" || saved === "system") {
+
+      if (
+        saved === "light" ||
+        saved === "dark" ||
+        saved === "system"
+      ) {
         setTheme(saved);
       }
     } catch {}
   }, []);
 
-  // বাইরে ক্লিক বা Esc দিলে বন্ধ
+  // Close dropdown on outside click or Escape
   useEffect(() => {
     if (!open) return;
 
-    const onMouseDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+    const onMouseDown = (e: globalThis.MouseEvent) => {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("keydown", onKey);
@@ -179,8 +296,10 @@ export default function ProfileDropdown({
 
   const close = () => setOpen(false);
 
+  // Theme change
   const handleThemeChange = (mode: ThemeMode) => {
     setTheme(mode);
+
     try {
       localStorage.setItem("rooted-theme", mode);
     } catch {}
@@ -190,14 +309,19 @@ export default function ProfileDropdown({
       (mode === "system" &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.dataset.theme = dark
+      ? "dark"
+      : "light";
   };
 
+  // Logout
   const handleLogout = async () => {
     if (loggingOut) return;
+
     try {
       setLoggingOut(true);
       close();
+
       await onLogout();
     } finally {
       setLoggingOut(false);
@@ -206,7 +330,8 @@ export default function ProfileDropdown({
 
   return (
     <div className="rpd" ref={rootRef}>
-      {/* নেভবার বাটন: ছবি (বামে) + নাম ও ইমেইল (ডানে) */}
+      {/* Navbar Profile Button */}
+
       <button
         type="button"
         className="rpd-trigger"
@@ -217,60 +342,121 @@ export default function ProfileDropdown({
         aria-label={t("dd_aria")}
         title={`${user.name} (${user.email})`}
       >
-        <Avatar name={user.name} image={user.image} size="md" />
+        <Avatar
+          name={user.name}
+          image={user.image}
+          size="md"
+        />
+
         <span className="rpd-trigger-text">
-          <span className="rpd-trigger-name">{user.name}</span>
-          <span className="rpd-trigger-email">{user.email}</span>
+          <span className="rpd-trigger-name">
+            {user.name}
+          </span>
+
+          <span className="rpd-trigger-email">
+            {user.email}
+          </span>
         </span>
       </button>
 
       {open && (
         <div className="rpd-menu" role="menu">
-          {/* 1. ইউজার তথ্য: ছবি + নাম + ইমেইল */}
+          {/* User Information */}
+
           <div className="rpd-head">
-            <Avatar name={user.name} image={user.image} size="lg" />
+            <Avatar
+              name={user.name}
+              image={user.image}
+              size="lg"
+            />
+
             <div className="rpd-head-text">
-              <h4 className="rpd-name">{user.name}</h4>
-              <p className="rpd-email">{user.email}</p>
-              <span className="rpd-role">{t(roleKey)}</span>
+              <h4 className="rpd-name">
+                {user.name}
+              </h4>
+
+              <p className="rpd-email">
+                {user.email}
+              </p>
+
+              <span
+                className="rpd-role"
+                data-role={isSuperAdmin ? "super-admin" : roles[0]}
+              >
+                {roleKey ? t(roleKey) : roleLabel}
+              </span>
             </div>
           </div>
 
-          {/* 2. MY ACCOUNT */}
-          <SectionTitle>{t("dd_my_account")}</SectionTitle>
+          {/* My Account */}
+
+          <SectionTitle>
+            {t("dd_my_account")}
+          </SectionTitle>
+
           {ACCOUNT_ITEMS.map((item) => (
-            <MenuLink key={item.href} item={item} onClick={close} />
+            <MenuLink
+              key={item.href}
+              item={item}
+              onClick={close}
+            />
           ))}
 
-          {/* 3. EVENT MANAGEMENT */}
+          {/* Event Management */}
+
           <div className="rpd-divider" />
-          <SectionTitle>{t("dd_events")}</SectionTitle>
+
+          <SectionTitle>
+            {t("dd_events")}
+          </SectionTitle>
+
           {eventItems.map((item) => (
-            <MenuLink key={item.href} item={item} onClick={close} />
+            <MenuLink
+              key={item.href}
+              item={item}
+              onClick={close}
+            />
           ))}
 
-          {/* 4. ADMIN (শুধু admin) */}
+          {/* Admin Section */}
+
           {isAdmin && (
             <>
               <div className="rpd-divider" />
-              <SectionTitle>{t("dd_admin_sec")}</SectionTitle>
-              <MenuLink item={ADMIN_ITEM} onClick={close} />
+
+              <SectionTitle>
+                {t("dd_admin_sec")}
+              </SectionTitle>
+
+              <MenuLink
+                item={ADMIN_ITEM}
+                onClick={close}
+              />
             </>
           )}
 
-          {/* 5. PREFERENCES */}
+          {/* Preferences */}
+
           <div className="rpd-divider" />
-          <SectionTitle>{t("dd_prefs")}</SectionTitle>
+
+          <SectionTitle>
+            {t("dd_prefs")}
+          </SectionTitle>
 
           <div className="rpd-row">
             <span className="rpd-row-label">
               <span className="rpd-ico tone-green">
                 <Globe size={17} />
               </span>
+
               {t("dd_language")}
             </span>
 
-            <div className="rpd-pill" role="group" aria-label={t("dd_language")}>
+            <div
+              className="rpd-pill"
+              role="group"
+              aria-label={t("dd_language")}
+            >
               <button
                 type="button"
                 className={lang === "bn" ? "is-active" : ""}
@@ -279,6 +465,7 @@ export default function ProfileDropdown({
               >
                 বাংলা
               </button>
+
               <button
                 type="button"
                 className={lang === "en" ? "is-active" : ""}
@@ -295,20 +482,36 @@ export default function ProfileDropdown({
               <span className="rpd-ico tone-indigo">
                 <Palette size={17} />
               </span>
+
               {t("dd_appearance")}
             </span>
-            <ThemeSwitcher theme={theme} onThemeChange={handleThemeChange} />
+
+            <ThemeSwitcher
+              theme={theme}
+              onThemeChange={handleThemeChange}
+            />
           </div>
 
-          {/* 6. HELP & SUPPORT */}
+          {/* Help & Support */}
+
           <div className="rpd-divider" />
-          <SectionTitle>{t("dd_help_sec")}</SectionTitle>
+
+          <SectionTitle>
+            {t("dd_help_sec")}
+          </SectionTitle>
+
           {HELP_ITEMS.map((item) => (
-            <MenuLink key={item.href} item={item} onClick={close} />
+            <MenuLink
+              key={item.href}
+              item={item}
+              onClick={close}
+            />
           ))}
 
-          {/* 7. LOG OUT */}
+          {/* Logout */}
+
           <div className="rpd-divider" />
+
           <button
             type="button"
             className="rpd-item rpd-logout"
@@ -319,8 +522,11 @@ export default function ProfileDropdown({
             <span className="rpd-ico tone-rose">
               <LogOut size={17} />
             </span>
+
             <span className="rpd-item-title">
-              {loggingOut ? t("dd_logging_out") : t("dd_logout")}
+              {loggingOut
+                ? t("dd_logging_out")
+                : t("dd_logout")}
             </span>
           </button>
         </div>

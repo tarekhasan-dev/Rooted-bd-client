@@ -2,8 +2,6 @@
    Same visual language as the event detail page (.evd).
    Dark mode follows html[data-theme="dark"]. */
 
-   
-
 .evc {
   --evc-top: 110px; /* raise this if the floating navbar overlaps the page */
 
@@ -282,17 +280,17 @@
   bottom: 14px;
   margin: 0;
   padding: 12px 16px 12px 14px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 12px;
-  align-items: start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   border-radius: 16px;
   background: color-mix(in srgb, var(--evc-card) 92%, transparent);
   backdrop-filter: blur(6px);
   box-shadow: var(--evc-shadow-sm);
 }
-.evc-art-note-ic {
+.evc-art-note > span {
   display: grid;
+  flex: none;
   place-items: center;
   width: 30px;
   height: 30px;
@@ -300,25 +298,20 @@
   background: var(--evc-soft);
   color: var(--evc-accent);
 }
-.evc-art-note blockquote {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.evc-art-note b,
+.evc-art-note small {
+  display: block;
 }
-.evc-art-note blockquote span {
+.evc-art-note b {
   font-family: "Fraunces", var(--font-bn), Georgia, serif;
-  font-size: 11.5px;
-  font-weight: 600;
-    line-height: 1.5;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
   color: var(--evc-ink);
 }
-.evc-art-note figcaption {
-  grid-column: 2;
-  margin-top: 6px;
+.evc-art-note small {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--evc-accent);
+  color: var(--evc-muted);
 }
 
 /* =========================================
@@ -527,7 +520,6 @@ textarea.evc-input {
   border-color: var(--evc-accent);
 }
 .evc-category-option.is-selected {
-  border-color: var(--evc-teal);
   background: var(--evc-gold-soft);
   color: var(--evc-gold-soft-ink);
   border-color: var(--evc-gold-line);
@@ -756,9 +748,42 @@ textarea.evc-input {
 /* Actions */
 .evc-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
+}
+.evc-actions-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.evc-myevents-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--evc-line);
+  border-radius: 999px;
+  background: #eef3ea;
+  color: #1b4332;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.evc-myevents-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--evc-accent);
+  background: var(--evc-soft);
+}
+[data-theme="dark"] .evc-myevents-btn {
+  background: var(--evc-soft);
+  color: var(--evc-ink);
 }
 
 /* Error */
@@ -1189,9 +1214,9 @@ textarea.evc-input {
   .evc-hero {
     grid-template-columns: 1fr;
   }
- .evc-art {
-  min-height: 400px;
-}
+  .evc-art {
+    min-height: 400px;
+  }
   .evc-cols {
     grid-template-columns: 1fr;
   }
@@ -1222,9 +1247,14 @@ textarea.evc-input {
   .evc-field-row .evc-field {
     margin-bottom: 18px;
   }
-  .evc-actions {
+  .evc-actions,
+  .evc-actions-right {
     flex-direction: column-reverse;
     align-items: stretch;
+  }
+  .evc-myevents-btn,
+  .evc-actions-right > * {
+    justify-content: center;
   }
   .evc-cta {
     flex-direction: column;

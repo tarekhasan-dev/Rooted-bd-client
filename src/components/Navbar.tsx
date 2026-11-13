@@ -1,4 +1,4 @@
-
+ 
 "use client";
 
 import "@/styles/navbar.css";
@@ -159,7 +159,9 @@ export default function Navbar() {
   const user = session?.user as SessionUser | undefined;
   const userEmail = user?.email;
 
+  // Profile information from backend
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileRole, setProfileRole] = useState<string | null>(null);
 
   const [active, setActive] = useState(() =>
     getTabFromUrl(pathname, "")
@@ -213,41 +215,41 @@ export default function Navbar() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Load profile image from MongoDB
+  // Load profile image and role from backend
   useEffect(() => {
     if (!userEmail) {
       setProfileImage(null);
+      setProfileRole(null);
       return;
     }
 
     let cancelled = false;
 
-    const loadProfileImage = async () => {
+    // Avoid showing the previous user's profile information
+    setProfileImage(null);
+    setProfileRole(null);
+
+    const loadProfile = async () => {
       try {
         const profile = await getMyProfile();
 
         if (!cancelled) {
           setProfileImage(profile.image ?? null);
+          setProfileRole(profile.role ?? "user");
         }
       } catch {
-        // Fallback to session image or user initials
+        // Fallback to session image and role
       }
     };
 
-    loadProfileImage();
+    loadProfile();
 
-    window.addEventListener(
-      "profile-updated",
-      loadProfileImage
-    );
+    window.addEventListener("profile-updated", loadProfile);
 
     return () => {
       cancelled = true;
 
-      window.removeEventListener(
-        "profile-updated",
-        loadProfileImage
-      );
+      window.removeEventListener("profile-updated", loadProfile);
     };
   }, [userEmail]);
 
@@ -561,7 +563,7 @@ export default function Navbar() {
                 email: user.email,
                 image: profileImage ?? user.image,
               }}
-              role={user.role}
+              role={profileRole ?? user.role}
               onLogout={handleLogout}
             />
           ) : (
