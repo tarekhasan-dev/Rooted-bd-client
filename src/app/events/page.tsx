@@ -1,12 +1,13 @@
-
 "use client";
 
 import "@/styles/events.css";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SaveButton from "@/components/saved/SaveButton";
 import Link from "next/link";
 import {
   ArrowRight,
+  Bookmark,
   CalendarDays,
   Leaf,
   MapPin,
@@ -35,8 +36,8 @@ interface Event {
 
 const CREATE_EVENT_HREF = "/create-event";
 const JOIN_HREF = "/signup";
-
-const ALL = "__all__";
+const SAVED_EVENTS_HREF = "/saved-events";
+const RESULTS_ID = "ev-results";
 
 function Illustration() {
   return (
@@ -79,7 +80,6 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] = useState(ALL);
 
   // Track images that fail to load.
   const [failedImages, setFailedImages] = useState<Set<string>>(
@@ -108,22 +108,9 @@ export default function EventsPage() {
 
       const response = await api("/events");
 
-      // Debug: inspect the complete API response.
-      console.log("EVENT API RESPONSE:", response);
-
       const eventList = Array.isArray(response?.events)
         ? response.events
         : [];
-
-      // Debug: inspect each event's image URL.
-      console.log(
-        "EVENT THUMBNAILS:",
-        eventList.map((event: Event) => ({
-          id: event._id,
-          title: event.title,
-          thumbnail: event.thumbnail,
-        }))
-      );
 
       setEvents(eventList);
       setFailedImages(new Set());
@@ -142,38 +129,11 @@ export default function EventsPage() {
     void fetchEvents();
   }, [fetchEvents]);
 
-  // Categories come from the database.
-  const categories = useMemo(() => {
-    const categoryMap = new Map<string, string>();
-
-    events.forEach((event) => {
-      const category = String(event.eventType ?? "").trim();
-      if (!category) return;
-
-      const key = category.toLowerCase();
-
-      if (!categoryMap.has(key)) {
-        categoryMap.set(key, category);
-      }
-    });
-
-    const dynamic = Array.from(categoryMap.values()).sort((a, b) =>
-      a.localeCompare(b)
-    );
-
-    return [ALL, ...dynamic];
-  }, [events]);
-
-  // Reset category if it no longer exists.
-  useEffect(() => {
-    if (!categories.includes(activeCategory)) {
-      setActiveCategory(ALL);
-    }
-  }, [categories, activeCategory]);
-
-  // Search + category filtering.
+  // Search filtering.
   const filteredEvents = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
+
+    if (q === "") return events;
 
     return events.filter((event) => {
       const fields = [
@@ -184,26 +144,26 @@ export default function EventsPage() {
         event.creatorName,
       ];
 
-      const matchesSearch =
-        q === "" ||
-        fields.some((f) => String(f ?? "").toLowerCase().includes(q));
-
-      const type = String(event.eventType ?? "").trim().toLowerCase();
-
-      const matchesCategory =
-        activeCategory === ALL || type === activeCategory.toLowerCase();
-
-      return matchesSearch && matchesCategory;
+      return fields.some((f) => String(f ?? "").toLowerCase().includes(q));
     });
-  }, [events, searchTerm, activeCategory]);
+  }, [events, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm("");
-    setActiveCategory(ALL);
   };
 
-  const hasActiveFilters =
-    searchTerm.trim() !== "" || activeCategory !== ALL;
+  // "All Events" button: reset the search and jump to the event list.
+  const handleShowAll = () => {
+    setSearchTerm("");
+
+    requestAnimationFrame(() => {
+      document
+        .getElementById(RESULTS_ID)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const hasActiveFilters = searchTerm.trim() !== "";
 
   const countText = t("evp_count")
     .replace("{shown}", String(filteredEvents.length))
@@ -220,13 +180,6 @@ export default function EventsPage() {
       const updated = new Set(previous);
       updated.add(eventId);
       return updated;
-    });
-  };
-
-  const handleImageLoad = (eventId: string, imageUrl: string) => {
-    console.log("EVENT IMAGE LOADED:", {
-      eventId,
-      imageUrl,
     });
   };
 
@@ -292,18 +245,37 @@ export default function EventsPage() {
 
             <span className="ev-label">{t("evp_category")}</span>
 
-            <div className="ev-chips">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className="ev-chip"
-                  aria-pressed={activeCategory === category}
-                  onClick={() => setActiveCategory(category)}
-                >
-                  {category === ALL ? t("evp_all") : category}
-                </button>
-              ))}
+            <div
+              className="ev-chips"
+              style={{ position: "relative", zIndex: 5 }}
+            >
+              {/* All Events */}
+              <button
+                type="button"
+                className="ev-chip"
+                aria-pressed={!hasActiveFilters}
+                onClick={handleShowAll}
+                style={{ cursor: "pointer" }}
+              >
+                {t("evp_all")}
+              </button>
+
+              {/* Saved Events (nav er Saved Events page er sathe connected) */}
+              <Link
+                href={SAVED_EVENTS_HREF}
+                className="ev-chip"
+                aria-pressed={false}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  textDecoration: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Bookmark size={14} />
+                {lang === "bn" ? "সেভ করা ইভেন্ট" : "Saved Events"}
+              </Link>
             </div>
           </div>
 
@@ -328,7 +300,7 @@ export default function EventsPage() {
         </section>
 
         {/* RESULTS */}
-        <section className="ev-results" aria-live="polite">
+        <section id={RESULTS_ID} className="ev-results" aria-live="polite">
           <div className="ev-results-head">
             <div>
               <h2 className="ev-display ev-h2">
@@ -446,15 +418,12 @@ export default function EventsPage() {
                       delay: Math.min(index, 8) * 0.05,
                     }}
                   >
-                    <div className="ev-thumb">
+                    <div className="ev-thumb" style={{ position: "relative" }}>
                       {showImage ? (
                         <img
                           src={imageUrl}
                           alt={event.title}
                           loading="lazy"
-                          onLoad={() =>
-                            handleImageLoad(event._id, imageUrl)
-                          }
                           onError={() =>
                             handleImageError(event._id, imageUrl)
                           }
@@ -470,6 +439,9 @@ export default function EventsPage() {
                       ) : (
                         <Sprout size={54} />
                       )}
+
+                      {/* Save (bookmark) button */}
+                      <SaveButton eventId={event._id} />
                     </div>
 
                     <div className="ev-card-body">

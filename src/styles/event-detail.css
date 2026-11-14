@@ -1,4 +1,3 @@
-
 /* Event detail page (/events/[id]).
    Works on top of events.css.
    Dark mode follows html[data-theme="dark"].
@@ -143,11 +142,17 @@
   font-size: 17px;
 }
 
-/* Photo / illustration */
+/* Photo / illustration box
+   FIX: the box is now a flex column and the white card sits in normal flow
+   at the bottom, so the box grows with the card and nothing gets cut off. */
 
-.evd-art {
+.evd .evd-art {
   position: relative;
-  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 460px;
+  padding: 1rem;
   border-radius: 22px;
   border-bottom: 8px solid #7a4a26;
   overflow: hidden;
@@ -176,7 +181,13 @@
   display: block;
 }
 
-.evd .ev-inset {
+/* Card inside the box: normal flow, not absolute */
+.evd .evd-art .ev-inset {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  margin: 0;
   z-index: 2;
 }
 
@@ -295,12 +306,44 @@
   }
 }
 
-/* Join event button */
+/* ---------- Action buttons: Join + Save side by side ---------- */
 
+.evd-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 0.9rem;
+}
+
+/* Shared look: same height, same shape */
+.evd .evd-actions .evd-join,
+.evd .evd-actions .evd-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3rem;
+  margin: 0;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Join: amber, the main action */
 .evd .evd-join {
   position: relative;
   isolation: isolate;
   z-index: 0;
+  border: 1.5px solid var(--ev-amber);
+  background: var(--ev-amber);
+  color: var(--ev-amber-ink);
+  box-shadow: 0 8px 16px -8px rgba(242, 180, 41, 0.9);
   transform: translateY(0);
   transition:
     transform 0.25s ease,
@@ -329,43 +372,35 @@
   }
 
   100% {
-    transform: scale(1.12);
+    transform: scale(1.1);
     opacity: 0;
   }
 }
 
-/* Hover */
-
 .evd .evd-join:not(:disabled):hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(243, 179, 42, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgba(242, 180, 41, 0.9);
 }
-
-/* Click */
 
 .evd .evd-join:not(:disabled):active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 2px 8px rgba(243, 179, 42, 0.2);
+  transform: translateY(0) scale(0.97);
 }
 
-/* Joined state */
-
+/* Joined: calm teal */
 .evd .evd-join[data-joined="true"] {
+  border-color: var(--evd-teal);
   background: var(--evd-teal);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(13, 107, 92, 0.2);
+  box-shadow: 0 8px 16px -8px rgba(13, 107, 92, 0.7);
 }
 
 .evd .evd-join[data-joined="true"]::after {
   display: none;
 }
 
-/* Disabled state */
-
 .evd .evd-join:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: not-allowed;
-  animation: none;
   transform: none;
   box-shadow: none;
 }
@@ -374,15 +409,54 @@
   display: none;
 }
 
+/* Save: outlined teal, the secondary action */
+.evd .evd-save {
+  border: 1.5px solid var(--evd-accent);
+  background: transparent;
+  color: var(--evd-accent);
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+.evd .evd-save:hover {
+  background: var(--evd-soft);
+  transform: translateY(-2px);
+}
+
+.evd .evd-save:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Saved: soft mint fill, filled icon */
+.evd .evd-save[aria-pressed="true"] {
+  background: var(--evd-soft);
+  border-color: var(--evd-accent);
+  color: var(--evd-accent);
+}
+
+.evd .evd-save:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Very small phones: stack the two buttons */
+@media (max-width: 380px) {
+  .evd-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Leave button */
 
 .evd-leave {
   display: block;
-  margin: 10px 0 0;
+  margin: 10px auto 0;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--evd-muted);
+  color: var(--ev-muted, var(--evd-muted));
   font-size: 13px;
   text-decoration: underline;
   cursor: pointer;
@@ -402,22 +476,25 @@
 
 .evd-notice {
   min-height: 1.2em;
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: var(--evd-accent);
+  margin: 8px 0 0 !important;
+  font-size: 13px !important;
+  text-align: center;
+  color: var(--evd-accent) !important;
 }
 
-/* About + Organizer panels */
+/* About + Organizer panels (equal height) */
 
 .evd-cols {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 22px;
   margin: 28px 0 8px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .evd-panel {
+  display: flex;
+  flex-direction: column;
   background: var(--evd-card);
   border: 1px solid var(--evd-line);
   border-radius: 22px;
@@ -497,6 +574,7 @@
   margin-top: 14px;
   font-size: 14px;
   color: var(--evd-muted);
+  overflow-wrap: anywhere;
 }
 
 .evd-place svg {
@@ -515,12 +593,30 @@
   margin-bottom: 18px;
 }
 
+/* A single card should not stretch across the whole page */
+.evd-related .ev-grid {
+  grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+}
+
 .evd .ev-card {
   transition: transform 0.25s, box-shadow 0.25s;
 }
 
 .evd .ev-card:hover {
   transform: translateY(-5px);
+}
+
+/* FIX: card content (description, location) must never get cut */
+.evd .ev-card-body > * {
+  flex-shrink: 0;
+}
+
+.evd .ev-card-body .ev-meta {
+  margin-bottom: 1rem;
+}
+
+.evd .ev-card-body .ev-btn {
+  margin-top: auto;
 }
 
 /* Loading skeleton */
@@ -549,7 +645,7 @@
     grid-template-columns: 1fr;
   }
 
-  .evd-art {
+  .evd .evd-art {
     min-height: 420px;
   }
 
@@ -573,7 +669,8 @@
   .evd-panel,
   .evd .ev-card,
   .evd-ic,
-  .evd .evd-join {
+  .evd .evd-join,
+  .evd .evd-save {
     transition: none;
   }
 }
