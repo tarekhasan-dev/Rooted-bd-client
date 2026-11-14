@@ -1,7 +1,7 @@
- 
 "use client";
 
 import "@/styles/navbar.css";
+import "@/styles/mobile-nav.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
@@ -9,13 +9,21 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import {
+  Activity,
   ArrowUpRight,
+  Bookmark,
   CalendarDays,
+  CircleCheck,
+  CirclePlus,
   House,
   Images,
   Info,
   Leaf,
+  LogOut,
   Mail,
+  Menu,
+  User as UserIcon,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -152,7 +160,7 @@ export default function Navbar() {
   const router = useRouter();
 
   // Cookie-based language provider
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const { data: session, isPending } = authClient.useSession();
 
@@ -169,6 +177,9 @@ export default function Navbar() {
 
   const [scrolled, setScrolled] = useState(false);
   const [instant, setInstant] = useState(true);
+
+  // Mobile menu
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const pendingRef = useRef<number | null>(null);
   const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -214,6 +225,30 @@ export default function Navbar() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Close the mobile menu when the page changes
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Mobile menu: lock page scroll and close on Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("keydown", onKey);
+
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   // Load profile image and role from backend
   useEffect(() => {
@@ -486,8 +521,169 @@ export default function Navbar() {
     return null;
   }
 
+  // Mobile menu: who can create events
+  const roles = String(profileRole ?? user?.role ?? "user")
+    .split(",")
+    .map((r) => r.trim().toLowerCase());
+
+  const canManage =
+    roles.includes("admin") ||
+    roles.includes("super_admin") ||
+    roles.includes("organizer");
+
+  const mobileAccount: { href: string; key: TKey; Icon: LucideIcon }[] = [
+    { href: "/my-profile", key: "dd_profile", Icon: UserIcon },
+    { href: "/saved-events", key: "dd_saved", Icon: Bookmark },
+    { href: "/my-activity", key: "dd_activity", Icon: Activity },
+    { href: "/my-events", key: "dd_joined", Icon: CircleCheck },
+    ...(canManage
+      ? [{ href: "/create-event", key: "dd_create" as TKey, Icon: CirclePlus }]
+      : []),
+  ];
+
+  const menuLabel = lang === "bn" ? "মেনু" : "Menu";
+  const avatarSrc = profileImage ?? user?.image ?? null;
+
   return (
     <header className="rbd-header">
+      {/* ---------- Mobile: thin top bar + hamburger menu ---------- */}
+      <div className="rbd-m">
+        <div className="rbd-m-bar">
+          <Link
+            href="/"
+            className="rbd-m-brand"
+            aria-label="rooted.BD home"
+            onClick={(e) => {
+              handleNav(e, 0, "/");
+              setMenuOpen(false);
+            }}
+          >
+            <span className="rbd-m-brand-icon">
+              <Leaf size={18} />
+            </span>
+
+            <span>
+              rooted<span className="rbd-m-dot">.</span>
+              <small>BD</small>
+            </span>
+          </Link>
+
+          <div className="rbd-m-right">
+            <LanguageToggle inline />
+
+            <button
+              type="button"
+              className="rbd-m-burger"
+              aria-label={menuLabel}
+              aria-expanded={menuOpen}
+              aria-controls="rbd-m-panel"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <>
+            <div
+              className="rbd-m-overlay"
+              onClick={() => setMenuOpen(false)}
+              aria-hidden="true"
+            />
+
+            <div id="rbd-m-panel" className="rbd-m-panel">
+              <div className="rbd-m-links">
+                {TABS.map(({ href, key, Icon }, index) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="rbd-m-link"
+                    aria-current={active === index ? "page" : undefined}
+                    onClick={(e) => {
+                      handleNav(e, index, href);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Icon size={20} />
+                    {t(key)}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="rbd-m-sep" />
+
+              {isPending ? null : user ? (
+                <>
+                  <div className="rbd-m-user">
+                    <span className="rbd-m-avatar">
+                      {avatarSrc ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={avatarSrc}
+                          alt={user.name}
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span>
+                          {user.name?.trim().charAt(0).toUpperCase() || "U"}
+                        </span>
+                      )}
+                    </span>
+
+                    <div>
+                      <b>{user.name}</b>
+                      <small>{user.email}</small>
+                    </div>
+                  </div>
+
+                  <p className="rbd-m-title">{t("dd_my_account")}</p>
+
+                  <div className="rbd-m-links">
+                    {mobileAccount.map(({ href, key, Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        className="rbd-m-link"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Icon size={20} />
+                        {t(key)}
+                      </Link>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="rbd-m-logout"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        void handleLogout();
+                      }}
+                    >
+                      <LogOut size={20} />
+                      {t("dd_logout")}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="rbd-m-login"
+                  onClick={(e) => {
+                    handleNav(e, -1, "/login");
+                    setMenuOpen(false);
+                  }}
+                >
+                  {t("nav_login")}
+                  <ArrowUpRight size={18} />
+                </Link>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ---------- Desktop: floating navbar (unchanged) ---------- */}
       <nav
         className="rbd-nav"
         aria-label="Main"

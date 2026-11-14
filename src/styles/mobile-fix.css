@@ -1,0 +1,103 @@
+/* Fixes for the hero (mobile + fade) and the mobile language toggle.
+   Uses !important so it always wins over hero.css. */
+
+/* ---------- Hero illustration: clean edge fade (all screens) ---------- */
+.hero-section .hero-scene {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%) !important;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%) !important;
+  -webkit-mask-composite: source-in !important;
+  mask-composite: intersect !important;
+}
+
+/* ---------- Hero on mobile ---------- */
+@media (max-width: 700px) {
+  .hero-section .hero-copy {
+    margin-top: 92px !important;
+    padding: 0 16px 24px !important;
+  }
+
+  .hero-section .hero-cta {
+    gap: 10px !important;
+    margin-top: 20px !important;
+  }
+
+  .hero-section .hero-cta .hero-btn {
+    flex: 1 1 150px !important;
+    max-width: 220px !important;
+    padding: 12px 10px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Pill sits below the buttons with clear space */
+  .hero-section .hero-pill {
+    margin-top: 16px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+
+  /* Illustration: full width, centered, in its own space below the pill */
+  .hero-section .hero-scene {
+    display: block !important;
+    width: 150% !important;
+    max-width: none !important;
+    height: auto !important;
+    margin: 0 0 0 -25% !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  /* Hide the dev-only floating leaves overlap near the text */
+  .hero-section .page-wind {
+    opacity: 0.6 !important;
+  }
+}
+
+/* ---------- Language toggle inside the mobile top bar ---------- */
+.rbd-m .lang-toggle.lang-toggle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid #dfe7dc;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.rbd-m .lang-toggle.lang-toggle-inline button {
+  min-width: 44px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #1b4d3e;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rbd-m .lang-toggle.lang-toggle-inline button.active {
+  background: #1b4d3e;
+  color: #fff;
+}
+
+[data-theme="dark"] .rbd-m .lang-toggle.lang-toggle-inline {
+  background: #17291c;
+  border-color: #29422e;
+}
+
+[data-theme="dark"] .rbd-m .lang-toggle.lang-toggle-inline button {
+  color: #e3f4e5;
+}
+
+[data-theme="dark"] .rbd-m .lang-toggle.lang-toggle-inline button.active {
+  background: #51cf66;
+  color: #0e1b12;
+}

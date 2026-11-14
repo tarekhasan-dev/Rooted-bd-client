@@ -24,6 +24,7 @@ import {
 import { MotionConfig, motion } from "motion/react";
 
 import { useLang } from "@/components/LanguageProvider";
+import SaveButton from "@/components/saved/SaveButton";
 import { authClient } from "@/lib/auth-client";
 
 import {
@@ -559,18 +560,23 @@ function EventDetailContent() {
                     <h2>{tx.joinTitle}</h2>
                     <p>{tx.joinText}</p>
 
-                    <button
-                      type="button"
-                      className="ev-amber evd-join"
-                      data-joined={joined}
-                      aria-pressed={joined}
-                      disabled={isPast || busy}
-                      onClick={() => void handleJoin()}
-                    >
-                      {joinLabel}
+                    {/* Join + Save: side by side */}
+                    <div className="evd-actions">
+                      <button
+                        type="button"
+                        className="evd-join"
+                        data-joined={joined}
+                        aria-pressed={joined}
+                        disabled={isPast || busy}
+                        onClick={() => void handleJoin()}
+                      >
+                        {joinLabel}
 
-                      {!joined && !isPast && <ArrowRight size={16} />}
-                    </button>
+                        {!joined && !isPast && <ArrowRight size={16} />}
+                      </button>
+
+                      <SaveButton eventId={event._id} variant="button" />
+                    </div>
 
                     {joined && !isPast && (
                       <button
@@ -660,15 +666,16 @@ function EventDetailContent() {
                           className="ev-thumb"
                           role={item.thumbnail ? "img" : undefined}
                           aria-label={item.thumbnail ? item.title : undefined}
-                          style={
-                            item.thumbnail
-                              ? {
-                                  backgroundImage: `url("${item.thumbnail}")`,
-                                }
-                              : undefined
-                          }
+                          style={{
+                            position: "relative",
+                            ...(item.thumbnail
+                              ? { backgroundImage: `url("${item.thumbnail}")` }
+                              : {}),
+                          }}
                         >
                           {!item.thumbnail && <Sprout size={54} />}
+
+                          <SaveButton eventId={item._id} />
                         </div>
 
                         <div className="ev-card-body">
