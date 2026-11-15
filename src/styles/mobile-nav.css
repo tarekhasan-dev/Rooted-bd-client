@@ -3,6 +3,9 @@
 
 .rbd-m {
   display: none;
+  /* .rbd-header has pointer-events: none (navbar.css) and children inherit it.
+     Without this line the mobile bar, the burger button and the menu cannot be tapped. */
+  pointer-events: auto;
 }
 
 @media (max-width: 860px) {
@@ -291,4 +294,4 @@
   .rbd-m-overlay {
     animation: none;
   }
-}
+}  
