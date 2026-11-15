@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -19,6 +20,8 @@ interface ProfileHeaderProps {
   onEdit?: () => void;
   onImageUpload?: (file: File) => Promise<void>;
   isUploadingImage?: boolean;
+  onCoverUpload?: (file: File) => Promise<void>;
+  isUploadingCover?: boolean;
   onValidationError?: (message: string) => void;
 }
 
@@ -36,10 +39,14 @@ export default function ProfileHeader({
   onEdit,
   onImageUpload,
   isUploadingImage = false,
+  onCoverUpload,
+  isUploadingCover = false,
   onValidationError,
 }: ProfileHeaderProps) {
   const { t, lang } = useLang();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const isBangla = lang === "bn";
 
@@ -63,6 +70,7 @@ export default function ProfileHeader({
     ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
     : null;
 
+  // Profile Image Upload
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -70,7 +78,11 @@ export default function ProfileHeader({
 
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
 
     if (!allowedTypes.includes(file.type)) {
       onValidationError?.(t("mp_image_type_error"));
@@ -86,6 +98,39 @@ export default function ProfileHeader({
 
     try {
       await onImageUpload?.(file);
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  // Cover Photo Upload
+  const handleCoverChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      onValidationError?.(t("mp_image_type_error"));
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      onValidationError?.(t("mp_image_size_error"));
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      await onCoverUpload?.(file);
     } finally {
       event.target.value = "";
     }
@@ -167,8 +212,25 @@ export default function ProfileHeader({
 
       {/* Banner */}
       <div className="relative h-[150px] overflow-hidden bg-gradient-to-b from-[#e5f5dd] via-[#c2e8b8] to-[#99d690] sm:h-[180px] md:h-[200px]">
+
+        {/* Uploaded Cover Photo */}
+        {profile.coverImage && (
+          <Image
+            src={profile.coverImage}
+            alt="Profile cover"
+            fill
+            priority
+            unoptimized
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
+
+        {/* Nature Banner Animation */}
         <svg
-          className="absolute inset-0 h-full w-full"
+          className={`absolute inset-0 h-full w-full ${
+            profile.coverImage ? "opacity-0" : "opacity-100"
+          }`}
           viewBox="0 0 1200 320"
           preserveAspectRatio="xMidYMid slice"
           xmlns="http://www.w3.org/2000/svg"
@@ -177,16 +239,36 @@ export default function ProfileHeader({
           <defs>
             <radialGradient id="profileSunGlow">
               <stop offset="0%" stopColor="#fff6a5" />
-              <stop offset="60%" stopColor="#ffd84d" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#ffd000" stopOpacity="0" />
+              <stop
+                offset="60%"
+                stopColor="#ffd84d"
+                stopOpacity="0.8"
+              />
+              <stop
+                offset="100%"
+                stopColor="#ffd000"
+                stopOpacity="0"
+              />
             </radialGradient>
 
-            <linearGradient id="profileHillBack" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient
+              id="profileHillBack"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
               <stop offset="0%" stopColor="#b6e5ab" />
               <stop offset="100%" stopColor="#90ce84" />
             </linearGradient>
 
-            <linearGradient id="profileHillFront" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient
+              id="profileHillFront"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
               <stop offset="0%" stopColor="#9dd691" />
               <stop offset="100%" stopColor="#72b564" />
             </linearGradient>
@@ -194,7 +276,12 @@ export default function ProfileHeader({
 
           {/* Sun */}
           <g className="ph-sun">
-            <circle cx="680" cy="30" r="115" fill="url(#profileSunGlow)" />
+            <circle
+              cx="680"
+              cy="30"
+              r="115"
+              fill="url(#profileSunGlow)"
+            />
           </g>
 
           {/* Clouds */}
@@ -214,12 +301,13 @@ export default function ProfileHeader({
             d="M-50 220 Q200 160 450 210 Q700 260 950 180 Q1150 130 1300 190 L1300 350 L-50 350Z"
             fill="url(#profileHillBack)"
           />
+
           <path
             d="M-50 250 Q150 210 380 240 Q650 270 900 210 Q1100 170 1280 230 L1280 350 L-50 350Z"
             fill="url(#profileHillFront)"
           />
 
-          {/* Trees (sway from the base) */}
+          {/* Trees */}
           {TREES.map((tree, index) => (
             <g
               key={index}
@@ -238,13 +326,21 @@ export default function ProfileHeader({
                 rx="4"
                 fill="#7a4a2a"
               />
-              <circle cx={tree.x} cy={tree.y - 125} r={tree.r} fill="#37864f" />
+
+              <circle
+                cx={tree.x}
+                cy={tree.y - 125}
+                r={tree.r}
+                fill="#37864f"
+              />
+
               <circle
                 cx={tree.x - 25}
                 cy={tree.y - 100}
                 r={tree.r * 0.72}
                 fill="#469b60"
               />
+
               <circle
                 cx={tree.x + 25}
                 cy={tree.y - 100}
@@ -258,22 +354,37 @@ export default function ProfileHeader({
           <g fill="#368d4e">
             <path
               className="ph-leaf"
-              style={{ animationDelay: "0s", animationDuration: "9s" }}
+              style={{
+                animationDelay: "0s",
+                animationDuration: "9s",
+              }}
               d="M285 75 Q295 65 305 75 Q295 85 285 75Z"
             />
+
             <path
               className="ph-leaf"
-              style={{ animationDelay: "2.5s", animationDuration: "11s" }}
+              style={{
+                animationDelay: "2.5s",
+                animationDuration: "11s",
+              }}
               d="M460 60 Q472 50 480 65 Q465 75 460 60Z"
             />
+
             <path
               className="ph-leaf"
-              style={{ animationDelay: "1.2s", animationDuration: "10s" }}
+              style={{
+                animationDelay: "1.2s",
+                animationDuration: "10s",
+              }}
               d="M945 80 Q955 70 962 82 Q950 92 945 80Z"
             />
+
             <path
               className="ph-leaf"
-              style={{ animationDelay: "4s", animationDuration: "12s" }}
+              style={{
+                animationDelay: "4s",
+                animationDuration: "12s",
+              }}
               d="M1005 70 Q1018 60 1025 72 Q1012 85 1005 70Z"
             />
           </g>
@@ -281,11 +392,18 @@ export default function ProfileHeader({
           {/* People Planting a Tree */}
           <g transform="translate(585 145)">
             <g transform="translate(-15 0)">
-              <circle cx="0" cy="0" r="18" fill="#d99b73" />
+              <circle
+                cx="0"
+                cy="0"
+                r="18"
+                fill="#d99b73"
+              />
+
               <path
                 d="M-18 25 Q-25 50 -25 95 L25 95 Q25 50 18 25Z"
                 fill="#d95338"
               />
+
               <path
                 d="M12 40 Q35 50 55 42"
                 stroke="#d99b73"
@@ -296,48 +414,129 @@ export default function ProfileHeader({
             </g>
 
             <g transform="translate(68 42)">
-              <circle cx="0" cy="0" r="11" fill="#c4835b" />
-              <path d="M-12 14 L12 14 L16 52 L-16 52Z" fill="white" />
-              <path d="M-22 -2 Q0 -18 22 -2Z" fill="#e0a96d" />
-              <ellipse cx="0" cy="-2" rx="28" ry="6" fill="#c98d50" />
+              <circle
+                cx="0"
+                cy="0"
+                r="11"
+                fill="#c4835b"
+              />
+
+              <path
+                d="M-12 14 L12 14 L16 52 L-16 52Z"
+                fill="white"
+              />
+
+              <path
+                d="M-22 -2 Q0 -18 22 -2Z"
+                fill="#e0a96d"
+              />
+
+              <ellipse
+                cx="0"
+                cy="-2"
+                rx="28"
+                ry="6"
+                fill="#c98d50"
+              />
             </g>
           </g>
         </svg>
 
         {/* Readability Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/25 to-transparent" />
+        <div
+          className={`absolute inset-0 ${
+            profile.coverImage
+              ? "bg-gradient-to-r from-black/45 via-black/15 to-transparent"
+              : "bg-gradient-to-r from-white/75 via-white/25 to-transparent"
+          }`}
+        />
 
         {/* Brand */}
-        <div className="absolute left-5 top-3 flex items-center gap-2 rounded-full border border-white/40 bg-white/40 px-3 py-1 text-xs font-bold tracking-widest text-[#164223] shadow-sm backdrop-blur-md sm:left-6">
+        <div className="absolute left-5 top-3 z-10 flex items-center gap-2 rounded-full border border-white/40 bg-white/40 px-3 py-1 text-xs font-bold tracking-widest text-[#164223] shadow-sm backdrop-blur-md sm:left-6">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-600 motion-reduce:animate-none" />
           ROOTED.BD
         </div>
 
         {/* Heading */}
         <div className="absolute left-5 top-[52px] z-10 max-w-[260px] sm:left-6 sm:top-[60px] sm:max-w-md">
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.25em] text-[#267a44]">
-            {isBangla ? "আপনার ব্যক্তিগত জায়গা" : "YOUR PERSONAL SPACE"}
+          <p
+            className={`mb-1 text-[11px] font-bold uppercase tracking-[0.25em] ${
+              profile.coverImage
+                ? "text-white"
+                : "text-[#267a44]"
+            }`}
+          >
+            {isBangla
+              ? "আপনার ব্যক্তিগত জায়গা"
+              : "YOUR PERSONAL SPACE"}
           </p>
 
-          <h1 className="text-xl font-extrabold tracking-tight text-[#164223] sm:text-2xl md:text-3xl">
+          <h1
+            className={`text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl ${
+              profile.coverImage
+                ? "text-white drop-shadow-md"
+                : "text-[#164223]"
+            }`}
+          >
             {isBangla ? "আমার প্রোফাইল" : "My Profile"}
           </h1>
 
-          <p className="mt-1 hidden text-xs font-medium leading-relaxed text-[#315d3c] sm:block sm:text-sm">
+          <p
+            className={`mt-1 hidden text-xs font-medium leading-relaxed sm:block sm:text-sm ${
+              profile.coverImage
+                ? "text-white/90"
+                : "text-[#315d3c]"
+            }`}
+          >
             {isBangla
               ? "আপনার ব্যক্তিগত তথ্য ও অ্যাকাউন্টের বিবরণ পরিচালনা করুন।"
               : "Manage your personal information and account details."}
           </p>
         </div>
 
+        {/* Cover Photo Upload Button */}
+        <div className="absolute right-4 top-3 z-20">
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            disabled={isUploadingCover}
+            aria-label={
+              isBangla ? "কভার ছবি পরিবর্তন" : "Change cover photo"
+            }
+            title={
+              isBangla ? "কভার ছবি পরিবর্তন" : "Change cover photo"
+            }
+            className="flex items-center gap-2 rounded-lg border border-white/50 bg-white/80 px-3 py-2 text-xs font-semibold text-[#164223] shadow-md backdrop-blur-md transition hover:scale-105 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isUploadingCover ? (
+              <LoaderCircle size={15} className="animate-spin" />
+            ) : (
+              <Camera size={15} />
+            )}
+
+            <span>
+              {isBangla ? "কভার পরিবর্তন" : "Edit Cover"}
+            </span>
+          </button>
+
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleCoverChange}
+            className="hidden"
+          />
+        </div>
+
         {/* Brand Decoration */}
-        <div className="absolute bottom-3 right-5 hidden rounded-full border border-white/40 bg-white/30 px-3 py-1.5 text-[11px] font-semibold text-[#27613a] backdrop-blur-md sm:block">
+        <div className="absolute bottom-3 right-5 z-10 hidden rounded-full border border-white/40 bg-white/30 px-3 py-1.5 text-[11px] font-semibold text-[#27613a] backdrop-blur-md sm:block">
           Growing Together · Creating Change
         </div>
       </div>
 
       {/* Profile Information Bar */}
       <div className="flex flex-col items-center gap-4 px-5 pb-4 sm:flex-row sm:items-start sm:px-6">
+
         {/* Profile Picture */}
         <div className="relative -mt-10 h-20 w-20 shrink-0 sm:h-24 sm:w-24">
           <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-[#edf2e5] shadow-lg dark:border-gray-900 dark:bg-gray-800">
@@ -404,7 +603,8 @@ export default function ProfileHeader({
             <p className="mt-1 flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:justify-start">
               <MapPin size={13} className="shrink-0" />
               {profile.location.district}
-              {profile.location.division && `, ${profile.location.division}`}
+              {profile.location.division &&
+                `, ${profile.location.division}`}
             </p>
           )}
         </div>
