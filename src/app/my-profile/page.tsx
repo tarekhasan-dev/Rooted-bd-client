@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -71,7 +72,7 @@ const toastStyles = {
 };
 
 export default function MyProfilePage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -80,7 +81,9 @@ export default function MyProfilePage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const [toast, setToast] = useState<ToastData | null>(null);
   const [isToastExiting, setIsToastExiting] = useState(false);
@@ -221,6 +224,40 @@ export default function MyProfilePage() {
     }
   };
 
+  // Handle Cover Photo Upload
+  const handleCoverUpload = async (file: File) => {
+    try {
+      setIsUploadingCover(true);
+
+      const result = await uploadProfileImage(file, "cover");
+
+      if (!result.success) {
+        throw new Error(
+          result.message || t("mp_image_upload_failed")
+        );
+      }
+
+      // Refresh profile to display the updated cover photo
+      await fetchProfile(false);
+
+      showToast(
+        lang === "bn"
+          ? "কভার ফটো সফলভাবে আপডেট হয়েছে।"
+          : "Cover photo updated successfully.",
+        "success"
+      );
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : t("mp_image_upload_failed"),
+        "error"
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
   // Loading State
   if (loading) {
     return (
@@ -353,12 +390,14 @@ export default function MyProfilePage() {
           onEdit={() => setIsEditModalOpen(true)}
           onImageUpload={handleImageUpload}
           isUploadingImage={isUploadingImage}
+          onCoverUpload={handleCoverUpload}
+          isUploadingCover={isUploadingCover}
           onValidationError={(message) =>
             showToast(message, "error", t("mp_invalid_file"))
           }
         />
 
-        {/* Profile Information: single grid, equal-height rows */}
+        {/* Profile Information */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <PersonalInfoCard
             user={profile}
